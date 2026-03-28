@@ -1,5 +1,11 @@
+import {
+  buildOnboardingLink,
+  formatCompensation,
+  type CompensationModel,
+} from '@/lib/task-onboarding'
+
 export const categories = [
-  { id: 'all', label: 'All Jobs' },
+  { id: 'all', label: 'All Tasks' },
   { id: 'business', label: 'Business' },
   { id: 'finance', label: 'Finance' },
   { id: 'health', label: 'Health' },
@@ -23,6 +29,9 @@ export type Bot = {
   completionSteps: string[]
   exampleDeliverables: string[]
   monthlyPrice: number
+  commissionRate?: number
+  compensationModel?: CompensationModel
+  featuredSkillId?: string
 }
 
 export const bots: Bot[] = [
@@ -163,6 +172,9 @@ export const bots: Bot[] = [
     ],
     exampleDeliverables: ['Onboarding packet', 'Credential checklist', 'Completion report'],
     monthlyPrice: 40,
+    commissionRate: 20,
+    compensationModel: 'completion',
+    featuredSkillId: 'agent-onboarding-link',
   },
   {
     id: 'specter-legal',
@@ -268,13 +280,23 @@ export const testimonials = [
   },
 ]
 
-export function buildAffiliateLink(bot: Bot, origin = 'https://moltcompany.ai') {
-  const params = new URLSearchParams({
-    model: bot.id,
-    source: 'affiliate',
-    vertical: bot.category,
+export function buildAffiliateLink(bot: Bot, origin?: string) {
+  return buildOnboardingLink({
+    origin,
+    source: 'official',
+    taskId: bot.id,
     role: bot.characterRole,
+    monthlyPrice: bot.monthlyPrice,
+    commissionRate: bot.commissionRate ?? 20,
+    compensationModel: bot.compensationModel ?? 'completion',
+    skill: bot.featuredSkillId ?? 'agent-onboarding-link',
   })
+}
 
-  return `${origin}/deploy?${params.toString()}`
+export function getBotCompensation(bot: Bot) {
+  return formatCompensation(
+    bot.monthlyPrice,
+    bot.commissionRate ?? 20,
+    bot.compensationModel ?? 'completion'
+  )
 }

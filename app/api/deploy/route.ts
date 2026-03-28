@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
+import { isSupabaseConfigured } from '@/lib/supabase'
 import { encrypt } from '@/lib/encryption'
 import { createCheckoutSession } from '@/lib/stripe'
 import { bots } from '@/lib/bots'
@@ -9,6 +10,30 @@ import { llmProviders } from '@/lib/providers'
 
 export async function POST(req: NextRequest) {
   try {
+    const body = await req.json()
+    const demoMode =
+      process.env.PUBLIC_DEMO_MODE === 'true' ||
+      process.env.NEXT_PUBLIC_PUBLIC_DEMO_MODE === 'true' ||
+      (process.env.NODE_ENV === 'development' && !isSupabaseConfigured)
+
+    if (demoMode) {
+      const { model_provider, model_name, channel, bot_id } = body
+      const safeProvider = model_provider || 'openai'
+      const safeModel = model_name || 'gpt-5.4'
+      const safeChannel = channel || 'chat'
+
+      const bot = bots.find(b => b.id === bot_id)
+      const params = new URLSearchParams({
+        demo: '1',
+        job: bot?.id || bot_id || 'custom-job',
+        provider: safeProvider,
+        model: safeModel,
+        channel: safeChannel,
+      })
+
+      return NextResponse.json({ redirect: `/console?${params.toString()}` })
+    }
+
     const authUser = await getUser(req)
     if (!authUser?.email && !authUser?.phone) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -21,8 +46,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
     }
 
-    const body = await req.json()
-    const { model_provider, model_name, channel, telegram_bot_token, teams_app_id, teams_app_password, whatsapp_phone_id, whatsapp_access_token, llm_api_key, character_files, bot_id } = body
+    const {
+      model_provider,
+      model_name,
+      channel,
+      telegram_bot_token,
+      teams_app_id,
+      teams_app_password,
+      whatsapp_phone_id,
+      whatsapp_access_token,
+      llm_api_key,
+      character_files,
+      bot_id,
+      job_name,
+      job_role,
+      job_color,
+      job_avatar,
+    } = body
 
     if (!model_provider || !model_name || !channel || !llm_api_key) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -109,10 +149,10 @@ export async function POST(req: NextRequest) {
         gateway_token: gatewayToken,
         character_files: character_files || null,
         bot_id: bot_id || null,
-        companion_name: bot?.characterName || (bot_id === 'clone' ? 'My Clone' : 'Custom Companion'),
-        companion_role: bot?.characterRole || (bot_id === 'clone' ? 'Digital Clone' : 'AI Assistant'),
-        companion_color: bot?.color || '#FFD600',
-        companion_avatar: bot?.avatar || null,
+        companion_name: bot?.characterName || job_name || (bot_id === 'clone' ? 'My Clone' : 'Custom Job'),
+        companion_role: bot?.characterRole || job_role || (bot_id === 'clone' ? 'Digital Clone' : 'AI Job'),
+        companion_color: bot?.color || job_color || '#FFD600',
+        companion_avatar: null,
       })
       .select('id')
       .single()

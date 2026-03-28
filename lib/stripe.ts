@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
   apiVersion: '2024-06-20',
 })
 
@@ -26,8 +26,8 @@ export async function createCheckoutSession({
         price_data: {
           currency: 'usd',
           product_data: {
-            name: 'MoltCompany.ai - Managed AI Companion',
-            description: 'Fully managed AI Telegram bot on dedicated AWS infrastructure',
+            name: 'MoltCompany.ai - AI Agent Job Runner',
+            description: 'Managed OpenClaw job runner on dedicated AWS infrastructure',
           },
           unit_amount: 4000,
           recurring: { interval: 'month' },

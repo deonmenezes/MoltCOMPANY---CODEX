@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import Link from 'next/link'
-import { skills, skillCategories, type SkillCategory } from '@/lib/skills'
+import { skills, skillCategories, type Skill, type SkillCategory } from '@/lib/skills'
 
 export default function SkillsPage() {
-  const { user, loading } = useAuth()
+  const { user } = useAuth()
   const [filter, setFilter] = useState<SkillCategory>('all')
   const [search, setSearch] = useState('')
   const [subscribing, setSubscribing] = useState<string | null>(null)
@@ -19,12 +19,17 @@ export default function SkillsPage() {
 
   const featuredSkills = skills.filter(s => s.featured)
 
-  const handleSubscribe = async (skillId: string) => {
-    if (!user) {
-      window.location.href = '/login'
+  const handleSubscribe = async (skill: Skill) => {
+    if (skill.ctaHref) {
+      window.location.href = skill.ctaHref
       return
     }
-    setSubscribing(skillId)
+
+    if (!user) {
+      window.location.href = '/connect'
+      return
+    }
+    setSubscribing(skill.id)
     try {
       const token = (await (window as any).__supabase?.auth?.getSession?.())?.data?.session?.access_token
       const res = await fetch('/api/skills/subscribe', {
@@ -33,7 +38,7 @@ export default function SkillsPage() {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ skillId }),
+        body: JSON.stringify({ skillId: skill.id }),
       })
       const data = await res.json()
       if (data.url) {
@@ -44,6 +49,11 @@ export default function SkillsPage() {
     } finally {
       setSubscribing(null)
     }
+  }
+
+  const actionLabel = (skill: Skill) => {
+    if (skill.ctaLabel) return skill.ctaLabel
+    return user ? 'SUBSCRIBE' : 'REQUEST ACCESS'
   }
 
   return (
@@ -59,7 +69,7 @@ export default function SkillsPage() {
             <span className="text-brand-yellow">AI AGENT</span>
           </h1>
           <p className="text-lg md:text-xl text-brand-gray-medium max-w-2xl mx-auto mb-8">
-            Browse 50+ skills from the OpenClaw ecosystem. Each skill gives your AI new powers. $10/month per skill, cancel anytime.
+            Browse 50+ skills from the OpenClaw ecosystem. Public demo packs open straight into a live flow, and the onboarding-link pack now ships at $40/mo with completion-based commission rules.
           </p>
           <div className="flex items-center justify-center gap-6 text-sm font-display font-bold uppercase">
             <div className="flex items-center gap-2">
@@ -104,13 +114,18 @@ export default function SkillsPage() {
                 </div>
                 <p className="text-sm text-brand-gray-medium flex-1">{skill.description}</p>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="font-display font-black text-lg">${skill.price}<span className="text-xs font-bold text-brand-gray-medium">/mo</span></span>
+                  <div>
+                    <span className="font-display font-black text-lg">${skill.price}<span className="text-xs font-bold text-brand-gray-medium">/mo</span></span>
+                    {skill.priceNote && (
+                      <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium mt-1">{skill.priceNote}</div>
+                    )}
+                  </div>
                   <button
-                    onClick={() => handleSubscribe(skill.id)}
+                    onClick={() => handleSubscribe(skill)}
                     disabled={subscribing === skill.id}
                     className="comic-btn text-xs py-2 px-5"
                   >
-                    {subscribing === skill.id ? 'LOADING...' : 'SUBSCRIBE'}
+                    {subscribing === skill.id ? 'LOADING...' : actionLabel(skill)}
                   </button>
                 </div>
               </div>
@@ -187,13 +202,18 @@ export default function SkillsPage() {
                 </div>
                 <p className="text-xs text-brand-gray-medium flex-1 line-clamp-2">{skill.description}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="font-display font-black">${skill.price}<span className="text-[10px] font-bold text-brand-gray-medium">/mo</span></span>
+                  <div>
+                    <span className="font-display font-black">${skill.price}<span className="text-[10px] font-bold text-brand-gray-medium">/mo</span></span>
+                    {skill.priceNote && (
+                      <div className="text-[9px] font-display font-bold uppercase text-brand-gray-medium mt-0.5">{skill.priceNote}</div>
+                    )}
+                  </div>
                   <button
-                    onClick={() => handleSubscribe(skill.id)}
+                    onClick={() => handleSubscribe(skill)}
                     disabled={subscribing === skill.id}
                     className="comic-btn-outline text-[10px] py-1.5 px-3"
                   >
-                    {subscribing === skill.id ? '...' : 'SUBSCRIBE'}
+                    {subscribing === skill.id ? '...' : actionLabel(skill)}
                   </button>
                 </div>
               </div>
@@ -210,8 +230,8 @@ export default function SkillsPage() {
             Got an idea for a skill? Build it with the Skill Creator and sell it on the marketplace. Earn from every subscription.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/sell" className="comic-btn text-sm py-3 px-8 no-underline">
-              START SELLING
+            <Link href="/connect" className="comic-btn text-sm py-3 px-8 no-underline">
+              CONNECT OPENCLAW
             </Link>
             <Link href="/docs" className="comic-btn-outline text-sm py-3 px-8 no-underline bg-white">
               READ THE DOCS

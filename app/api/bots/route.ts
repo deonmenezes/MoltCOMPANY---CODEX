@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { isSupabaseConfigured } from '@/lib/supabase'
 import { bots as officialBots } from '@/lib/bots'
+
+export const dynamic = 'force-dynamic'
 
 export type UnifiedBot = {
   id: string
@@ -25,18 +28,20 @@ export async function GET(req: NextRequest) {
     const sort = req.nextUrl.searchParams.get('sort') || 'trending'
     const search = (req.nextUrl.searchParams.get('q') || '').trim().toLowerCase()
     const category = req.nextUrl.searchParams.get('category') || 'all'
+    const source = req.nextUrl.searchParams.get('source') || 'all'
     const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '30') || 30, 100)
     const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0') || 0
 
-    // Get like counts grouped by bot_id
-    const { data: likeRows } = await supabase
-      .from('bot_likes')
-      .select('bot_id')
-
     const likeMap: Record<string, number> = {}
-    ;(likeRows || []).forEach(row => {
-      likeMap[row.bot_id] = (likeMap[row.bot_id] || 0) + 1
-    })
+    if (isSupabaseConfigured) {
+      const { data: likeRows } = await supabase
+        .from('bot_likes')
+        .select('bot_id')
+
+      ;(likeRows || []).forEach(row => {
+        likeMap[row.bot_id] = (likeMap[row.bot_id] || 0) + 1
+      })
+    }
 
     // Build official bots
     const officialUnified: UnifiedBot[] = officialBots.map(b => ({
@@ -57,12 +62,14 @@ export async function GET(req: NextRequest) {
     }))
 
     // Fetch community bots
-    let query = supabase
-      .from('community_bots')
-      .select('id, name, bot_name, description, icon_url, author_name, bot_role, color, category, tags, likes, deploys, created_at')
-      .eq('status', 'published')
-
-    const { data: communityData } = await query
+    const communityData = isSupabaseConfigured
+      ? (
+          await supabase
+            .from('community_bots')
+            .select('id, name, bot_name, description, icon_url, author_name, bot_role, color, category, tags, likes, deploys, created_at')
+            .eq('status', 'published')
+        ).data
+      : []
 
     const communityUnified: UnifiedBot[] = (communityData || []).map(b => ({
       id: `community-${b.id}`,
@@ -84,6 +91,12 @@ export async function GET(req: NextRequest) {
 
     // Merge
     let all = [...officialUnified, ...communityUnified]
+
+    if (source === 'official') {
+      all = all.filter(b => b.isOfficial)
+    } else if (source === 'community') {
+      all = all.filter(b => !b.isOfficial)
+    }
 
     // Filter by category
     if (category && category !== 'all') {

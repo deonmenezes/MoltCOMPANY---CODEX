@@ -2,7 +2,10 @@ import crypto from 'crypto'
 
 const ALGORITHM = 'aes-256-gcm'
 
-if (!process.env.ENCRYPTION_KEY && !process.env.NEXTAUTH_SECRET) {
+const warned = globalThis as typeof globalThis & { __moltcompanyEncryptionWarned?: boolean }
+
+if (!process.env.ENCRYPTION_KEY && !process.env.NEXTAUTH_SECRET && !warned.__moltcompanyEncryptionWarned) {
+  warned.__moltcompanyEncryptionWarned = true
   console.warn('[SECURITY] Neither ENCRYPTION_KEY nor NEXTAUTH_SECRET is set. Encryption will be insecure.')
 }
 

@@ -1,406 +1,100 @@
 'use client'
 
-import { useAuth } from '@/components/AuthProvider'
-import { useState, Suspense } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 import { CompanionSelector } from '@/components/ModelSelector'
-import { TelegramConnect } from '@/components/TelegramConnect'
-import { TeamsConnect } from '@/components/TeamsConnect'
-import { WhatsAppConnect } from '@/components/WhatsAppConnect'
-import { ChannelSelector } from '@/components/ChannelSelector'
-import { ApiKeyInput } from '@/components/ApiKeyInput'
-import { DeployButton } from '@/components/DeployButton'
-import { CharacterEditor } from '@/components/CharacterEditor'
-import { getCharacterFilesForBot, type CharacterFiles } from '@/lib/character-files'
+import { TaskMiniMark, TaskSheet } from '@/components/TaskVisual'
 import { bots, type Bot } from '@/lib/bots'
-import { llmProviders } from '@/lib/providers'
+import { buildOnboardingLink, formatCompensation } from '@/lib/task-onboarding'
 
-function AvatarFallback({ name, color, size }: { name: string; color: string; size: number }) {
-  return (
-    <div
-      className="rounded-full avatar-comic flex items-center justify-center"
-      style={{ width: size, height: size, backgroundColor: `${color}30`, border: '3px solid black' }}
-    >
-      <span className="font-display font-black text-2xl text-black">{name.charAt(0)}</span>
-    </div>
-  )
+type StepId = 'task' | 'filters' | 'link'
+
+type CommunityTask = {
+  id: number
+  name: string
+  bot_name: string
+  description: string
+  character_file?: string | null
+  role?: string | null
+  color?: string | null
+  category?: string | null
+  tags?: string[]
+  author_name?: string | null
 }
 
-type StepId = 'companion' | 'model' | 'channel' | 'personality' | 'deploy'
+type ClaimTask = {
+  id: string
+  source: 'official' | 'community' | 'draft'
+  characterName: string
+  characterRole: string
+  category: string
+  description: string
+  color: string
+  onboardingItems: string[]
+  completionSteps: string[]
+  packetPreview: string
+  monthlyPrice: number
+  commissionRate: number
+  compensationModel: 'completion' | 'holdback' | 'custom'
+}
 
-function DeployForm() {
-  const { user, session, loading } = useAuth()
-  const searchParams = useSearchParams()
-  const botParam = searchParams.get('model') || searchParams.get('community')
-  const canceled = searchParams.get('canceled') === 'true'
+const AGENTS = [
+  { id: 'openai-agent', label: 'OpenAI Agent', text: 'Best default for onboarding links headed to OpenAI or Codex-style operators.' },
+  { id: 'codex', label: 'Codex', text: 'Use when the claimer is a coding agent running inside Codex.' },
+  { id: 'openclaw', label: 'OpenClaw', text: 'Use when the task still hands off to an OpenClaw runtime.' },
+  { id: 'custom-agent', label: 'Custom Agent', text: 'Use for another runner while keeping the same payout and handoff packet.' },
+]
 
-  const hasPreselected = !!bots.find(b => b.id === botParam)
-  const initialBot = bots.find(b => b.id === botParam) || bots[0]
+const CHANNELS = ['chat', 'slack', 'telegram', 'email']
 
-  const [selectedBot, setSelectedBot] = useState<Bot>(initialBot)
-  const [avatarError, setAvatarError] = useState(false)
-  const [selectedProvider, setSelectedProvider] = useState(llmProviders[0].id)
-  const [selectedModelId, setSelectedModelId] = useState(llmProviders[0].models[0].id)
-  const [selectedChannel, setSelectedChannel] = useState('telegram')
-  const [telegramToken, setTelegramToken] = useState('')
-  const [teamsAppId, setTeamsAppId] = useState('')
-  const [teamsAppPassword, setTeamsAppPassword] = useState('')
-  const [whatsappPhoneId, setWhatsappPhoneId] = useState('')
-  const [whatsappAccessToken, setWhatsappAccessToken] = useState('')
-  const [apiKey, setApiKey] = useState('')
-  const [characterFiles, setCharacterFiles] = useState<CharacterFiles>(() => getCharacterFilesForBot(initialBot.id))
-
-  const allSteps: StepId[] = hasPreselected
-    ? ['model', 'channel', 'personality', 'deploy']
-    : ['companion', 'model', 'channel', 'personality', 'deploy']
-
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
-  const currentStep = allSteps[currentStepIndex]
-
-  const currentProvider = llmProviders.find(p => p.id === selectedProvider) || llmProviders[0]
-  const selectedModel = currentProvider.models.find(m => m.id === selectedModelId) || currentProvider.models[0]
-
-  // DEV ONLY: bypass auth for local UI testing (remove before production)
-  const isDev = process.env.NODE_ENV === 'development'
-
-  if (loading && !isDev) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
-        <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full" />
-      </div>
-    )
+function mapBot(bot: Bot): ClaimTask {
+  return {
+    id: bot.id,
+    source: 'official',
+    characterName: bot.characterName,
+    characterRole: bot.characterRole,
+    category: bot.category,
+    description: bot.description,
+    color: bot.color,
+    onboardingItems: bot.onboardingItems,
+    completionSteps: bot.completionSteps,
+    packetPreview: [
+      `Task: ${bot.characterName}`,
+      `Role: ${bot.characterRole}`,
+      '',
+      ...bot.onboardingItems,
+    ].join('\n'),
+    monthlyPrice: bot.monthlyPrice,
+    commissionRate: bot.commissionRate ?? 20,
+    compensationModel: bot.compensationModel ?? 'completion',
   }
+}
 
-  if (!user && !isDev) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
-        <div className="text-center">
-          <h2 className="comic-heading text-3xl mb-4">SIGN IN TO DEPLOY</h2>
-          <p className="text-brand-gray-medium mb-6">Sign in with Google or your phone number to get started</p>
-          <a href="/login" className="comic-btn inline-block no-underline">
-            SIGN IN
-          </a>
-        </div>
-      </div>
-    )
+function mapCommunityTask(task: CommunityTask): ClaimTask {
+  return {
+    id: String(task.id),
+    source: 'community',
+    characterName: (task.name || task.bot_name || 'COMMUNITY TASK').toUpperCase(),
+    characterRole: (task.role || 'COMMUNITY TASK').toUpperCase(),
+    category: task.category || 'operations',
+    description: task.description || 'Community-posted task pack.',
+    color: task.color || '#8B5CF6',
+    onboardingItems: [
+      'Imported community brief',
+      'OpenAI-agent onboarding link generated from this claim',
+      'Operator handoff and pricing rules attached',
+    ],
+    completionSteps: [
+      'Read the imported packet and confirm missing access',
+      'Run the posted workflow against the selected channel',
+      'Return the final handoff package to the operator',
+    ],
+    packetPreview: task.character_file || task.description || 'Community packet preview unavailable.',
+    monthlyPrice: 40,
+    commissionRate: 20,
+    compensationModel: 'completion',
   }
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 'companion': return !!selectedBot
-      case 'model': return !!selectedProvider && !!selectedModelId && !!apiKey
-      case 'channel':
-        if (selectedChannel === 'telegram') return !!telegramToken
-        if (selectedChannel === 'teams') return !!teamsAppId && !!teamsAppPassword
-        if (selectedChannel === 'whatsapp') return !!whatsappPhoneId && !!whatsappAccessToken
-        return false
-      case 'personality': return true
-      case 'deploy': return true
-      default: return false
-    }
-  }
-
-  const handleNext = () => {
-    if (currentStepIndex < allSteps.length - 1) {
-      setCurrentStepIndex(currentStepIndex + 1)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
-
-  const handleBack = () => {
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex(currentStepIndex - 1)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
-
-  const goToStep = (index: number) => {
-    if (index <= currentStepIndex) {
-      setCurrentStepIndex(index)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
-
-  const handleDeploy = async () => {
-    const res = await fetch('/api/deploy', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.access_token}`,
-      },
-      body: JSON.stringify({
-        model_provider: selectedProvider,
-        model_name: selectedModelId,
-        channel: selectedChannel,
-        telegram_bot_token: selectedChannel === 'telegram' ? telegramToken : undefined,
-        teams_app_id: selectedChannel === 'teams' ? teamsAppId : undefined,
-        teams_app_password: selectedChannel === 'teams' ? teamsAppPassword : undefined,
-        whatsapp_phone_id: selectedChannel === 'whatsapp' ? whatsappPhoneId : undefined,
-        whatsapp_access_token: selectedChannel === 'whatsapp' ? whatsappAccessToken : undefined,
-        llm_api_key: apiKey,
-        character_files: characterFiles,
-        bot_id: selectedBot.id,
-      }),
-    })
-
-    const data = await res.json()
-
-    if (data.redirect) {
-      window.location.href = data.redirect
-    } else if (data.url) {
-      window.location.href = data.url
-    } else {
-      alert(data.error || 'Something went wrong')
-    }
-  }
-
-  const stepLabels: Record<StepId, string> = {
-    companion: 'Companion',
-    model: 'AI Model',
-    channel: 'Channel',
-    personality: 'Personality',
-    deploy: 'Deploy',
-  }
-
-  return (
-    <div className="min-h-screen bg-white pt-24 pb-16 px-4">
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
-          {!selectedBot.avatar || avatarError ? (
-            <AvatarFallback name={selectedBot.characterName} color={selectedBot.color} size={56} />
-          ) : (
-            <Image
-              src={selectedBot.avatar}
-              alt={selectedBot.characterName}
-              width={56}
-              height={56}
-              className="rounded-full avatar-comic"
-              onError={() => setAvatarError(true)}
-            />
-          )}
-          <div>
-            <h1 className="comic-heading text-2xl md:text-3xl">HIRE {selectedBot.characterName}</h1>
-            <p className="text-xs font-display font-bold text-brand-gray-medium uppercase">{selectedBot.characterRole}</p>
-          </div>
-        </div>
-
-        {/* Payment canceled banner */}
-        {canceled && (
-          <div className="mb-6 p-4 border-3 border-black bg-red-50">
-            <p className="font-display font-bold text-sm text-red-700">
-              PAYMENT CANCELED &mdash; Your companion has not been deployed. You can try again below.
-            </p>
-          </div>
-        )}
-
-        {/* Progress bar */}
-        <div className="mb-10">
-          <div className="flex items-center gap-1">
-            {allSteps.map((step, i) => (
-              <div key={step} className="flex items-center flex-1">
-                <button
-                  onClick={() => goToStep(i)}
-                  className={`flex items-center gap-2 ${i <= currentStepIndex ? 'cursor-pointer' : 'cursor-default'}`}
-                >
-                  <div className={`w-8 h-8 border-3 border-black flex items-center justify-center font-display font-black text-xs transition-all ${
-                    i < currentStepIndex ? 'bg-black text-white' :
-                    i === currentStepIndex ? 'bg-brand-yellow text-black' :
-                    'bg-white text-brand-gray-medium'
-                  }`}>
-                    {i < currentStepIndex ? '\u2713' : i + 1}
-                  </div>
-                  <span className={`hidden sm:inline text-xs font-display font-bold uppercase ${
-                    i === currentStepIndex ? 'text-black' : 'text-brand-gray-medium'
-                  }`}>
-                    {stepLabels[step]}
-                  </span>
-                </button>
-                {i < allSteps.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-2 ${i < currentStepIndex ? 'bg-black' : 'bg-gray-200'}`} />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Step content */}
-        <div className="min-h-[400px]">
-          {/* STEP: Companion */}
-          {currentStep === 'companion' && (
-            <div>
-              <h2 className="comic-heading text-xl mb-2">CHOOSE YOUR AI COMPANION</h2>
-              <p className="text-sm text-brand-gray-medium mb-6 font-body">Each companion has a unique personality and expertise.</p>
-              <CompanionSelector
-                selected={selectedBot.id}
-                onSelect={(bot) => {
-                  setSelectedBot(bot)
-                  setAvatarError(false)
-                  setCharacterFiles(getCharacterFilesForBot(bot.id))
-                }}
-              />
-            </div>
-          )}
-
-          {/* STEP: Model */}
-          {currentStep === 'model' && (
-            <div>
-              <h2 className="comic-heading text-xl mb-2">CHOOSE AI MODEL</h2>
-              <p className="text-sm text-brand-gray-medium mb-6 font-body">Select the LLM provider, model, and enter your API key.</p>
-
-              {/* Provider tabs */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {llmProviders.map((provider) => (
-                  <button
-                    key={provider.id}
-                    onClick={() => {
-                      setSelectedProvider(provider.id)
-                      setSelectedModelId(provider.models[0].id)
-                      setApiKey('')
-                    }}
-                    className={`px-4 py-2 border-3 border-black font-display font-bold text-sm uppercase transition-all duration-200 ${
-                      selectedProvider === provider.id
-                        ? 'bg-brand-yellow shadow-comic'
-                        : 'bg-white hover:shadow-comic-sm hover:-translate-y-0.5'
-                    }`}
-                  >
-                    {provider.name}
-                  </button>
-                ))}
-              </div>
-
-              {/* Model selection */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                {currentProvider.models.map((model) => (
-                  <button
-                    key={model.id}
-                    onClick={() => setSelectedModelId(model.id)}
-                    className={`px-4 py-2 border-3 border-black font-display font-bold text-xs uppercase transition-all duration-200 ${
-                      selectedModelId === model.id
-                        ? 'bg-black text-white'
-                        : 'bg-white text-black hover:bg-gray-50'
-                    }`}
-                  >
-                    {model.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* API Key */}
-              <ApiKeyInput provider={selectedProvider} apiKey={apiKey} onSave={setApiKey} />
-            </div>
-          )}
-
-          {/* STEP: Channel */}
-          {currentStep === 'channel' && (
-            <div>
-              <h2 className="comic-heading text-xl mb-2">CHOOSE CHANNEL</h2>
-              <p className="text-sm text-brand-gray-medium mb-6 font-body">Select where your companion will live and connect it.</p>
-              <ChannelSelector selected={selectedChannel} onSelect={setSelectedChannel} />
-
-              <div className="mt-8">
-                {selectedChannel === 'telegram' && (
-                  <TelegramConnect token={telegramToken} onSave={setTelegramToken} />
-                )}
-                {selectedChannel === 'teams' && (
-                  <TeamsConnect
-                    appId={teamsAppId}
-                    appPassword={teamsAppPassword}
-                    onSave={(id, pw) => { setTeamsAppId(id); setTeamsAppPassword(pw) }}
-                  />
-                )}
-                {selectedChannel === 'whatsapp' && (
-                  <WhatsAppConnect
-                    phoneNumberId={whatsappPhoneId}
-                    accessToken={whatsappAccessToken}
-                    onSave={(phoneId, token) => { setWhatsappPhoneId(phoneId); setWhatsappAccessToken(token) }}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* STEP: Personality */}
-          {currentStep === 'personality' && (
-            <div>
-              <h2 className="comic-heading text-xl mb-2">CUSTOMIZE PERSONALITY</h2>
-              <p className="text-sm text-brand-gray-medium mb-6 font-body">
-                Edit {selectedBot.characterName}&apos;s personality files. Presets are loaded automatically &mdash; you can skip this step.
-              </p>
-              <CharacterEditor files={characterFiles} onChange={setCharacterFiles} />
-            </div>
-          )}
-
-          {/* STEP: Deploy */}
-          {currentStep === 'deploy' && (
-            <div>
-              <h2 className="comic-heading text-xl mb-6">REVIEW & HIRE</h2>
-
-              {/* Summary */}
-              <div className="comic-card p-6 mb-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">Companion</span>
-                  <div className="flex items-center gap-2">
-                    {selectedBot.avatar && !avatarError ? (
-                      <Image src={selectedBot.avatar} alt="" width={24} height={24} className="rounded-full border-2 border-black" onError={() => setAvatarError(true)} />
-                    ) : null}
-                    <span className="font-display font-bold text-sm">{selectedBot.characterName}</span>
-                  </div>
-                </div>
-                <div className="h-px bg-gray-200" />
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">AI Model</span>
-                  <span className="font-display font-bold text-sm">{currentProvider.name} / {selectedModel.label}</span>
-                </div>
-                <div className="h-px bg-gray-200" />
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">Channel</span>
-                  <span className="font-display font-bold text-sm">{selectedChannel === 'teams' ? 'Microsoft Teams' : selectedChannel === 'whatsapp' ? 'WhatsApp' : 'Telegram'}</span>
-                </div>
-                <div className="h-px bg-gray-200" />
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">API Key</span>
-                  <span className="font-display font-bold text-sm text-green-700">{'\u2713'} Saved</span>
-                </div>
-                <div className="h-px bg-gray-200" />
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">{selectedChannel === 'teams' ? 'Teams Bot' : selectedChannel === 'whatsapp' ? 'WhatsApp Number' : 'Telegram Bot'}</span>
-                  <span className="font-display font-bold text-sm text-green-700">{'\u2713'} Connected</span>
-                </div>
-              </div>
-
-              <DeployButton disabled={false} onDeploy={handleDeploy} botName={selectedBot.characterName} />
-            </div>
-          )}
-        </div>
-
-        {/* Navigation buttons */}
-        <div className="mt-10 flex items-center justify-between">
-          {currentStepIndex > 0 ? (
-            <button
-              onClick={handleBack}
-              className="comic-btn-outline text-sm py-3 px-6"
-            >
-              &larr; BACK
-            </button>
-          ) : (
-            <div />
-          )}
-
-          {currentStep !== 'deploy' && (
-            <button
-              onClick={handleNext}
-              disabled={!canProceed()}
-              className="comic-btn text-sm py-3 px-8 disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
-            >
-              {currentStep === 'personality' ? 'REVIEW' : 'NEXT'} &rarr;
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  )
 }
 
 export default function DeployPage() {
@@ -410,7 +104,493 @@ export default function DeployPage() {
         <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full" />
       </div>
     }>
-      <DeployForm />
+      <ClaimFlow />
     </Suspense>
+  )
+}
+
+function ClaimFlow() {
+  const searchParams = useSearchParams()
+  const modelId = searchParams.get('model')
+  const communityId = searchParams.get('community')
+  const draftId = searchParams.get('draft')
+  const fromAffiliate = searchParams.get('source') === 'affiliate'
+
+  const preselectedBot = bots.find(bot => bot.id === modelId) || bots[0]
+  const [selectedBot, setSelectedBot] = useState<Bot>(preselectedBot)
+  const [communityTask, setCommunityTask] = useState<ClaimTask | null>(null)
+  const [draftTask, setDraftTask] = useState<ClaimTask | null>(null)
+  const [communityLoading, setCommunityLoading] = useState(Boolean(communityId && !modelId))
+  const [stepIndex, setStepIndex] = useState(0)
+  const [agent, setAgent] = useState('openai-agent')
+  const [channel, setChannel] = useState('chat')
+  const [operator, setOperator] = useState('Dispatch Lead')
+  const [thread, setThread] = useState('Shared task channel')
+  const [handoff, setHandoff] = useState('Return a completion summary with blockers, outcome, and next action.')
+  const [monthlyPrice, setMonthlyPrice] = useState(String(preselectedBot.monthlyPrice))
+  const [commissionRate, setCommissionRate] = useState(String(preselectedBot.commissionRate ?? 20))
+  const [compensationModel, setCompensationModel] = useState<'completion' | 'holdback' | 'custom'>(preselectedBot.compensationModel ?? 'completion')
+  const [copied, setCopied] = useState(false)
+
+  const steps: StepId[] = ['task', 'filters', 'link']
+
+  useEffect(() => {
+    if (!draftId) return
+
+    try {
+      const raw = localStorage.getItem('moltcompany:draft-task')
+      if (!raw) return
+      const parsed = JSON.parse(raw) as ClaimTask
+      setDraftTask(parsed)
+      setMonthlyPrice(String(parsed.monthlyPrice))
+      setCommissionRate(String(parsed.commissionRate))
+      setCompensationModel(parsed.compensationModel)
+    } catch {
+      setDraftTask(null)
+    }
+  }, [draftId])
+
+  useEffect(() => {
+    if (!communityId || modelId) return
+
+    let active = true
+    setCommunityLoading(true)
+
+    fetch('/api/community?limit=200')
+      .then(async response => {
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || 'Failed to load task')
+        return data
+      })
+      .then(data => {
+        if (!active) return
+        const match = (data.bots || []).find((task: CommunityTask) => String(task.id) === communityId)
+        setCommunityTask(match ? mapCommunityTask(match) : null)
+      })
+      .catch(() => {
+        if (active) setCommunityTask(null)
+      })
+      .finally(() => {
+        if (active) setCommunityLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [communityId, modelId])
+
+  useEffect(() => {
+    setMonthlyPrice(String(selectedBot.monthlyPrice))
+    setCommissionRate(String(selectedBot.commissionRate ?? 20))
+    setCompensationModel(selectedBot.compensationModel ?? 'completion')
+  }, [selectedBot])
+
+  const currentTask = useMemo<ClaimTask>(() => {
+    if (draftTask) return draftTask
+    if (communityTask) return communityTask
+    return mapBot(selectedBot)
+  }, [communityTask, draftTask, selectedBot])
+
+  const generatedLink = buildOnboardingLink({
+    source: currentTask.source,
+    taskId: currentTask.id,
+    role: currentTask.characterRole,
+    agent,
+    channel,
+    monthlyPrice: Number(monthlyPrice) || currentTask.monthlyPrice,
+    commissionRate: Number(commissionRate) || currentTask.commissionRate,
+    compensationModel,
+    handoff,
+    thread,
+    operator,
+  })
+
+  const canProceed =
+    steps[stepIndex] === 'task'
+      ? Boolean(currentTask)
+      : steps[stepIndex] === 'filters'
+        ? Boolean(operator.trim() && handoff.trim())
+        : true
+
+  if (communityLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
+        <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-white pt-20 pb-16 px-4">
+      <div className="max-w-6xl mx-auto">
+        <section className="mb-8 border-3 border-black bg-brand-yellow/10 p-6 md:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div>
+              <span className="inline-block bg-white border-3 border-black px-3 py-1 text-xs font-display font-black uppercase mb-4">
+                Agent claim flow
+              </span>
+              <h1 className="comic-heading text-4xl md:text-6xl mb-4">
+                CLAIM THE TASK
+                <br />
+                GENERATE THE LINK
+              </h1>
+              <p className="text-lg text-brand-gray-dark max-w-2xl">
+                Claiming is no longer model setup first. Pick the task, set the payout and handoff filters, then generate the onboarding link that the OpenAI agent actually needs.
+              </p>
+            </div>
+            <div className="comic-card p-5 bg-white">
+              <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium mb-2">Current task packet</div>
+              <TaskSheet
+                color={currentTask.color}
+                category={currentTask.category}
+                role={currentTask.characterRole}
+                summary={currentTask.description}
+                bullets={currentTask.onboardingItems}
+                compact
+              />
+              <div className="text-sm font-display font-black mt-4">
+                {formatCompensation(Number(monthlyPrice) || currentTask.monthlyPrice, Number(commissionRate) || currentTask.commissionRate, compensationModel)}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <div className="flex flex-wrap gap-2 mb-8">
+              {steps.map((step, index) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() => index <= stepIndex && setStepIndex(index)}
+                  className={`px-4 py-2 border-3 border-black font-display font-bold text-xs uppercase transition ${
+                    index === stepIndex
+                      ? 'bg-brand-yellow shadow-comic-sm'
+                      : index < stepIndex
+                        ? 'bg-black text-white'
+                        : 'bg-white text-brand-gray-medium'
+                  }`}
+                >
+                  {index + 1}. {step}
+                </button>
+              ))}
+            </div>
+
+            {steps[stepIndex] === 'task' && (
+              <section className="space-y-6">
+                <SectionHeader
+                  title="Choose the task"
+                  text="Select the work to claim, then the next screen will attach the payout and handoff rules."
+                />
+
+                {fromAffiliate && (
+                  <div className="comic-card p-4 bg-brand-yellow/20">
+                    <p className="text-sm font-display font-bold uppercase">
+                      Affiliate / onboarding link source detected. The task is already preloaded for a faster claim.
+                    </p>
+                  </div>
+                )}
+
+                {draftTask ? (
+                  <div className="comic-card p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <TaskMiniMark color={currentTask.color} size="lg" />
+                      <div>
+                        <h2 className="comic-heading text-2xl">{currentTask.characterName}</h2>
+                        <p className="text-sm text-brand-gray-medium">Local-first draft loaded from this browser session.</p>
+                      </div>
+                    </div>
+                    <TaskSheet
+                      color={currentTask.color}
+                      category={currentTask.category}
+                      role={currentTask.characterRole}
+                      summary={currentTask.description}
+                      bullets={currentTask.onboardingItems}
+                    />
+                  </div>
+                ) : communityTask ? (
+                  <div className="comic-card p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <TaskMiniMark color={currentTask.color} size="lg" />
+                      <div>
+                        <h2 className="comic-heading text-2xl">{currentTask.characterName}</h2>
+                        <p className="text-sm text-brand-gray-medium">Community task pack loaded from the public board.</p>
+                      </div>
+                    </div>
+                    <TaskSheet
+                      color={currentTask.color}
+                      category={currentTask.category}
+                      role={currentTask.characterRole}
+                      summary={currentTask.description}
+                      bullets={currentTask.onboardingItems}
+                    />
+                  </div>
+                ) : (
+                  <CompanionSelector
+                    selected={selectedBot.id}
+                    onSelect={bot => {
+                      setSelectedBot(bot)
+                      setStepIndex(0)
+                    }}
+                  />
+                )}
+              </section>
+            )}
+
+            {steps[stepIndex] === 'filters' && (
+              <section className="space-y-6">
+                <SectionHeader
+                  title="Set filters top to bottom"
+                  text="This screen is the new claim UX: agent target, delivery lane, payout, and final handoff all in one stacked flow."
+                />
+
+                <Field label="Agent target">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {AGENTS.map(option => (
+                      <ChoiceCard
+                        key={option.id}
+                        active={agent === option.id}
+                        title={option.label}
+                        text={option.text}
+                        onClick={() => setAgent(option.id)}
+                      />
+                    ))}
+                  </div>
+                </Field>
+
+                <Field label="Delivery channel">
+                  <div className="flex flex-wrap gap-2">
+                    {CHANNELS.map(option => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setChannel(option)}
+                        className={`px-3 py-2 border-2 border-black font-display font-bold text-xs uppercase ${channel === option ? 'bg-brand-yellow shadow-comic-sm' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Field label="$ / month">
+                    <input
+                      type="number"
+                      min="0"
+                      value={monthlyPrice}
+                      onChange={event => setMonthlyPrice(event.target.value)}
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                    />
+                  </Field>
+                  <Field label="Commission %">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={commissionRate}
+                      onChange={event => setCommissionRate(event.target.value)}
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                    />
+                  </Field>
+                </div>
+
+                <Field label="Commission rule">
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <ChoiceCard
+                      active={compensationModel === 'completion'}
+                      title="Completion"
+                      text="Commission only matters after the agent reaches the finish line."
+                      onClick={() => setCompensationModel('completion')}
+                    />
+                    <ChoiceCard
+                      active={compensationModel === 'holdback'}
+                      title="Holdback"
+                      text="Reserve part of the payout until the handoff packet is accepted."
+                      onClick={() => setCompensationModel('holdback')}
+                    />
+                    <ChoiceCard
+                      active={compensationModel === 'custom'}
+                      title="Custom"
+                      text="Use a custom rate or special rule for this claimer."
+                      onClick={() => setCompensationModel('custom')}
+                    />
+                  </div>
+                </Field>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Field label="Operator">
+                    <input
+                      value={operator}
+                      onChange={event => setOperator(event.target.value)}
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                    />
+                  </Field>
+                  <Field label="Thread / channel">
+                    <input
+                      value={thread}
+                      onChange={event => setThread(event.target.value)}
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                    />
+                  </Field>
+                </div>
+
+                <Field label="Final handoff">
+                  <textarea
+                    value={handoff}
+                    onChange={event => setHandoff(event.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
+                  />
+                </Field>
+              </section>
+            )}
+
+            {steps[stepIndex] === 'link' && (
+              <section className="space-y-6">
+                <SectionHeader
+                  title="Generate onboarding link"
+                  text="This is the link the OpenAI agent opens. It carries the task summary, payout terms, handoff owner, and routing lane."
+                />
+
+                <div className="comic-card p-6">
+                  <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium mb-2">Generated link</div>
+                  <div className="border-3 border-black bg-gray-50 p-4 font-mono text-xs break-all">
+                    {generatedLink}
+                  </div>
+                </div>
+
+                <div className="comic-card p-6">
+                  <h3 className="comic-heading text-2xl mb-4">Packet preview</h3>
+                  <pre className="max-h-[320px] overflow-auto whitespace-pre-wrap border-3 border-black bg-gray-50 p-4 text-sm text-brand-gray-dark">
+                    {currentTask.packetPreview}
+                  </pre>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(generatedLink)
+                      setCopied(true)
+                      window.setTimeout(() => setCopied(false), 1800)
+                    }}
+                    className="comic-btn text-sm py-3"
+                  >
+                    {copied ? 'LINK COPIED' : 'COPY ONBOARDING LINK'}
+                  </button>
+                  <a href={generatedLink} className="comic-btn-outline text-sm py-3 text-center no-underline">
+                    OPEN ONBOARDING PAGE
+                  </a>
+                </div>
+              </section>
+            )}
+
+            <div className="mt-8 flex items-center justify-between">
+              {stepIndex > 0 ? (
+                <button type="button" onClick={() => setStepIndex(stepIndex - 1)} className="comic-btn-outline text-sm py-3 px-6">
+                  ← BACK
+                </button>
+              ) : (
+                <Link href="/create" className="comic-btn-outline text-sm py-3 px-6 no-underline">
+                  POST A TASK
+                </Link>
+              )}
+
+              {steps[stepIndex] !== 'link' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canProceed) return
+                    setStepIndex(stepIndex + 1)
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  disabled={!canProceed}
+                  className="comic-btn text-sm py-3 px-8 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  NEXT →
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-5 lg:sticky lg:top-24 self-start">
+            <TaskSheet
+              color={currentTask.color}
+              category={currentTask.category}
+              role={currentTask.characterRole}
+              summary={currentTask.description}
+              bullets={currentTask.onboardingItems}
+              label="Claim summary"
+            />
+
+            <div className="comic-card p-5">
+              <h2 className="comic-heading text-2xl mb-3">Compensation</h2>
+              <div className="text-lg font-display font-black">
+                {formatCompensation(
+                  Number(monthlyPrice) || currentTask.monthlyPrice,
+                  Number(commissionRate) || currentTask.commissionRate,
+                  compensationModel
+                )}
+              </div>
+              <p className="text-sm text-brand-gray-medium mt-2">
+                Use this to explain the $40/mo base, the 20% completion-linked rule, or your custom payout framing before the agent starts.
+              </p>
+            </div>
+
+            <div className="comic-card p-5">
+              <h2 className="comic-heading text-2xl mb-3">What this fixes</h2>
+              <ul className="space-y-2 text-sm text-brand-gray-dark">
+                <li>- No sign-in wall before the claim packet is ready</li>
+                <li>- No old provider/API-key wizard before task context exists</li>
+                <li>- One shareable onboarding link for the OpenAI agent</li>
+                <li>- Filters are stacked top to bottom instead of buried across multiple steps</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SectionHeader({ title, text }: { title: string; text: string }) {
+  return (
+    <div>
+      <h2 className="comic-heading text-3xl mb-2">{title}</h2>
+      <p className="text-brand-gray-medium">{text}</p>
+    </div>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="comic-card p-6">
+      <label className="block font-display font-bold text-sm uppercase mb-3">{label}</label>
+      {children}
+    </div>
+  )
+}
+
+function ChoiceCard({
+  active,
+  title,
+  text,
+  onClick,
+}: {
+  active: boolean
+  title: string
+  text: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-left border-3 border-black p-4 transition ${active ? 'bg-brand-yellow shadow-comic-sm' : 'bg-white hover:bg-gray-50'}`}
+    >
+      <div className="font-display font-black uppercase mb-2">{title}</div>
+      <p className="text-sm text-brand-gray-dark">{text}</p>
+    </button>
   )
 }

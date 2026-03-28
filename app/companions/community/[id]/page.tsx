@@ -4,6 +4,8 @@ import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { TaskMiniMark, TaskSheet } from '@/components/TaskVisual'
+import { formatCompensation } from '@/lib/task-onboarding'
 
 type CommunityBot = {
   id: number
@@ -127,8 +129,8 @@ export default function CommunityBotDetailPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${bot?.name || 'AI Companion'} on MoltCompany.AI`,
-          text: bot?.description || 'Check out this AI companion!',
+          title: `${bot?.name || 'AI Task'} on MoltCompany.AI`,
+          text: bot?.description || 'Check out this AI-agent task pack!',
           url,
         })
         return
@@ -160,7 +162,7 @@ export default function CommunityBotDetailPage() {
         alert(data.error || 'Failed to fork')
       }
     } catch {
-      alert('Failed to fork companion')
+      alert('Failed to fork task pack')
     } finally {
       setForking(false)
     }
@@ -210,7 +212,7 @@ export default function CommunityBotDetailPage() {
     return (
       <div className="min-h-screen bg-white pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="comic-heading text-3xl mb-4">COMPANION NOT FOUND</h1>
+          <h1 className="comic-heading text-3xl mb-4">TASK PACK NOT FOUND</h1>
           <Link href="/community" className="comic-btn inline-block">BROWSE COMMUNITY</Link>
         </div>
       </div>
@@ -247,13 +249,20 @@ export default function CommunityBotDetailPage() {
           <div className="md:col-span-1">
             <div className="comic-card p-6 flex flex-col items-center md:sticky md:top-24">
               <div className="h-2 w-full -mt-6 -mx-6 mb-5" style={{ backgroundColor: botColor, marginLeft: 'calc(-1.5rem)', marginRight: 'calc(-1.5rem)', width: 'calc(100% + 3rem)' }} />
-              {bot.icon_url ? (
-                <img src={bot.icon_url} alt={displayName} className="w-32 h-32 rounded-full avatar-comic bg-brand-gray object-cover" />
-              ) : (
-                <div className="w-32 h-32 rounded-full avatar-comic flex items-center justify-center" style={{ backgroundColor: `${botColor}20`, border: '4px solid black' }}>
-                  <span className="font-display font-black text-5xl" style={{ color: botColor }}>{displayName.charAt(0).toUpperCase()}</span>
-                </div>
-              )}
+              <TaskMiniMark color={botColor} size="lg" className="mb-4" />
+              <TaskSheet
+                color={botColor}
+                category={bot.category || 'community'}
+                role={bot.role || 'COMMUNITY TASK'}
+                summary={bot.description || 'Community-posted task pack'}
+                bullets={[
+                  `Published by ${bot.author_name}`,
+                  characterContent ? 'Character file included' : 'No character file attached',
+                  'Launchable on your own dedicated runner',
+                ]}
+                compact
+                className="w-full"
+              />
 
               {/* Voting */}
               <div className="flex items-center gap-3 mt-5">
@@ -278,7 +287,7 @@ export default function CommunityBotDetailPage() {
                   <span>{bot.downvotes || 0}</span>
                 </button>
               </div>
-              {!user && <p className="text-xs text-brand-gray-medium mt-2">Sign in to vote</p>}
+              {!user && <p className="text-xs text-brand-gray-medium mt-2">Voting stays account-based, but claiming and onboarding are now open.</p>}
 
               {/* Action buttons */}
               <div className="w-full mt-5 space-y-2">
@@ -306,7 +315,7 @@ export default function CommunityBotDetailPage() {
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-display font-black">{bot.deploy_count || 0}</div>
-                  <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase">Hired</div>
+                  <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase">Launched</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-display font-black">{bot.fork_count || 0}</div>
@@ -362,7 +371,7 @@ export default function CommunityBotDetailPage() {
             </div>
 
             <p className="text-brand-gray-dark font-body text-lg mb-6">
-              {bot.description || 'A community-created AI companion.'}
+              {bot.description || 'A community-posted task pack for OpenClaw agents.'}
             </p>
 
             {/* CTA */}
@@ -371,9 +380,12 @@ export default function CommunityBotDetailPage() {
                 <span className="comic-heading text-3xl">$40</span>
                 <span className="text-brand-gray-medium font-medium">/month</span>
               </div>
-              <p className="text-xs text-brand-gray-medium mb-4">Deploy this community companion on your own dedicated server. Choose any LLM provider.</p>
+              <p className="text-xs font-display font-black uppercase text-brand-gray-medium mb-3">
+                {formatCompensation(40, 20, 'completion')}
+              </p>
+              <p className="text-xs text-brand-gray-medium mb-4">Claim this community task, set the handoff filters, and generate the onboarding link for the OpenAI agent.</p>
               <Link href={`/deploy?community=${bot.id}`} className="comic-btn block text-center w-full text-lg">
-                HIRE {displayName.toUpperCase()}
+                CLAIM + GENERATE LINK
               </Link>
             </div>
 
@@ -408,7 +420,7 @@ export default function CommunityBotDetailPage() {
                   </div>
                   <div className="comic-card p-3">
                     <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Channel</div>
-                    <div className="text-sm font-bold text-black">Telegram</div>
+                    <div className="text-sm font-bold text-black">Telegram / Teams / WhatsApp</div>
                   </div>
                   <div className="comic-card p-3">
                     <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Published</div>
@@ -475,7 +487,7 @@ export default function CommunityBotDetailPage() {
                     <textarea
                       value={reviewText}
                       onChange={e => setReviewText(e.target.value)}
-                      placeholder="Share your experience with this companion..."
+                      placeholder="Share your experience with this task pack..."
                       maxLength={500}
                       rows={3}
                       className="w-full px-4 py-3 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition resize-none mb-3"
@@ -489,8 +501,7 @@ export default function CommunityBotDetailPage() {
                   </div>
                 ) : (
                   <div className="comic-card p-6 text-center">
-                    <p className="text-brand-gray-medium mb-3">Sign in to leave a review</p>
-                    <Link href="/login" className="comic-btn-outline text-sm inline-block">SIGN IN</Link>
+                    <p className="text-brand-gray-medium mb-3">Guest review posting is paused while the onboarding flow is open-access.</p>
                   </div>
                 )}
 
@@ -522,7 +533,7 @@ export default function CommunityBotDetailPage() {
                   </div>
                 ) : (
                   <div className="comic-card p-8 text-center">
-                    <p className="text-brand-gray-medium">No reviews yet. Be the first to review this companion!</p>
+                    <p className="text-brand-gray-medium">No reviews yet. Be the first to review this task pack.</p>
                   </div>
                 )}
               </div>
@@ -530,23 +541,17 @@ export default function CommunityBotDetailPage() {
           </div>
         </div>
 
-        {/* Related companions */}
+        {/* Related task packs */}
         {relatedBots.length > 0 && (
           <section className="border-t-3 border-black pt-10">
-            <h2 className="comic-heading text-2xl mb-6">SIMILAR COMPANIONS</h2>
+            <h2 className="comic-heading text-2xl mb-6">SIMILAR TASK PACKS</h2>
             <div className="grid sm:grid-cols-3 gap-6">
               {relatedBots.map(rb => {
                 const rbName = rb.name || rb.bot_name || 'Unnamed'
                 const rbColor = rb.color || '#8B5CF6'
                 return (
                   <Link key={rb.id} href={`/companions/community/${rb.id}`} className="comic-card-hover p-5 flex items-center gap-4">
-                    {rb.icon_url ? (
-                      <img src={rb.icon_url} alt="" className="w-12 h-12 rounded-full avatar-comic object-cover bg-brand-gray" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full avatar-comic flex items-center justify-center" style={{ backgroundColor: `${rbColor}30` }}>
-                        <span className="font-display font-black text-lg">{rbName.charAt(0).toUpperCase()}</span>
-                      </div>
-                    )}
+                    <TaskMiniMark color={rbColor} />
                     <div className="min-w-0 flex-1">
                       <h4 className="font-display font-bold text-sm uppercase truncate">{rbName}</h4>
                       {rb.role && <p className="text-[10px] text-brand-gray-medium uppercase">{rb.role}</p>}

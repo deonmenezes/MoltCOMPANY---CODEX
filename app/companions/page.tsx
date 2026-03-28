@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { bots, categories } from '@/lib/bots'
+import { TaskMiniMark, TaskSheet } from '@/components/TaskVisual'
+import { formatCompensation } from '@/lib/task-onboarding'
 
 type CommunityBot = {
   id: number
@@ -55,11 +56,11 @@ export default function CompanionsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="comic-heading text-3xl">ALL AI AGENT JOBS</h1>
-            <p className="text-sm text-brand-gray-medium mt-1">Browse official job packs and community-posted OpenClaw workflows</p>
+            <h1 className="comic-heading text-3xl">ALL AI AGENT TASKS</h1>
+            <p className="text-sm text-brand-gray-medium mt-1">Browse official task packs and community-posted OpenClaw workflows</p>
           </div>
           <Link href="/create" className="comic-btn text-sm py-2 px-5 whitespace-nowrap">
-            POST A JOB
+            POST A TASK
           </Link>
         </div>
 
@@ -89,7 +90,7 @@ export default function CompanionsPage() {
             {filter !== 'verified' && filter !== 'all' && filter !== 'community' ? null : (
               <div className="flex items-center gap-2 mb-6">
                 <h2 className="comic-heading text-xl">
-                  {filter === 'verified' ? 'VERIFIED JOB PACKS' : filter === 'community' ? '' : 'VERIFIED JOB PACKS'}
+                  {filter === 'verified' ? 'VERIFIED TASK PACKS' : filter === 'community' ? '' : 'VERIFIED TASK PACKS'}
                 </h2>
                 <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-display font-bold uppercase border border-green-700">
                   Official
@@ -108,7 +109,7 @@ export default function CompanionsPage() {
         {showCommunity && (
           <section>
             <div className="flex items-center gap-2 mb-6">
-              <h2 className="comic-heading text-xl">COMMUNITY JOB PACKS</h2>
+              <h2 className="comic-heading text-xl">COMMUNITY TASK PACKS</h2>
               <span className="px-2 py-0.5 bg-purple-500 text-white text-[10px] font-display font-bold uppercase border border-purple-700">
                 OpenClaw
               </span>
@@ -125,9 +126,9 @@ export default function CompanionsPage() {
               </div>
             ) : (
               <div className="comic-card p-8 text-center">
-                <p className="text-brand-gray-medium mb-4">No public job packs yet. Be the first to post one.</p>
-                <Link href="/community/publish" className="comic-btn-outline text-sm inline-block">
-                  POST YOUR JOB
+                <p className="text-brand-gray-medium mb-4">No public task packs yet. Be the first to post one.</p>
+                <Link href="/create" className="comic-btn-outline text-sm inline-block">
+                  POST YOUR TASK
                 </Link>
               </div>
             )}
@@ -139,59 +140,37 @@ export default function CompanionsPage() {
 }
 
 function OfficialCard({ bot }: { bot: typeof bots[number] }) {
-  const [imgError, setImgError] = useState(false)
-
   return (
     <div className="comic-card-hover flex flex-col">
-      <div className="h-2" style={{ backgroundColor: bot.color }} />
-      <Link href={`/companion/${bot.id}`} className="p-6 pb-2 flex flex-col items-center text-center hover:bg-gray-50/50 transition">
-        {!bot.avatar || imgError ? (
-          <div
-            className="w-20 h-20 rounded-full avatar-comic flex items-center justify-center mb-3"
-            style={{ backgroundColor: `${bot.color}30`, borderColor: bot.color }}
-          >
-            <span className="font-display font-black text-2xl text-black">
-              {bot.characterName.charAt(0)}
-            </span>
-          </div>
-        ) : (
-          <Image
-            src={bot.avatar}
-            alt={bot.characterName}
-            width={80}
-            height={80}
-            className="avatar-comic rounded-full bg-brand-gray mb-3"
-            onError={() => setImgError(true)}
-          />
-        )}
-        <div className="flex items-center gap-1.5 mb-1">
+      <Link href={`/companion/${bot.id}`} className="p-6 pb-2 hover:bg-gray-50/50 transition">
+        <div className="flex items-center gap-3 mb-3">
+          <TaskMiniMark color={bot.color} size="lg" />
           <h3 className="comic-heading text-2xl">{bot.characterName}</h3>
           <span className="text-green-500 text-sm" title="Verified">&#10003;</span>
         </div>
-        <span
-          className="inline-block mt-1 px-3 py-0.5 text-xs font-display font-bold uppercase border-2 border-black"
-          style={{ backgroundColor: bot.color, color: bot.color === '#FFD600' ? '#000' : '#fff' }}
-        >
-          {bot.characterRole}
-        </span>
-        <div className="w-full mt-4">
-          <div className="border-t-2 border-dashed border-brand-gray-medium" />
-          <p className="font-body text-sm text-brand-gray-dark text-center mt-3">
-            {bot.tagline}
-          </p>
-        </div>
+        <TaskSheet
+          color={bot.color}
+          category={bot.category}
+          role={bot.characterRole}
+          summary={bot.description}
+          bullets={bot.onboardingItems}
+          className="mt-4"
+        />
       </Link>
       <div className="p-6 pt-4 mt-auto">
         <div className="flex items-baseline justify-center gap-2 mb-4">
           <span className="comic-heading text-3xl">${bot.monthlyPrice}</span>
           <span className="text-brand-gray-medium font-medium text-sm">/month</span>
         </div>
+        <p className="text-center text-[10px] font-display font-black uppercase text-brand-gray-medium mb-4">
+          {formatCompensation(bot.monthlyPrice, bot.commissionRate ?? 20, bot.compensationModel ?? 'completion')}
+        </p>
         <div className="flex gap-2">
           <Link href={`/companion/${bot.id}`} className="comic-btn-outline block text-center flex-1 text-sm">
-            VIEW JOB
+            VIEW TASK
           </Link>
           <Link href={`/deploy?model=${bot.id}`} className="comic-btn block text-center flex-1 text-sm">
-            CLAIM
+            CLAIM + LINK
           </Link>
         </div>
       </div>
@@ -202,31 +181,26 @@ function OfficialCard({ bot }: { bot: typeof bots[number] }) {
 function CommunityCard({ bot }: { bot: CommunityBot }) {
   return (
     <div className="comic-card-hover flex flex-col">
-      <div className="h-2 bg-purple-500" />
-      <Link href={`/companions/community/${bot.id}`} className="p-6 pb-2 flex flex-col items-center text-center hover:bg-gray-50/50 transition">
-        {bot.icon_url ? (
-          <img
-            src={bot.icon_url}
-            alt={bot.name || bot.bot_name}
-            className="w-20 h-20 rounded-full avatar-comic bg-brand-gray mb-3 object-cover"
-          />
-        ) : (
-          <div className="w-20 h-20 rounded-full avatar-comic flex items-center justify-center mb-3 bg-purple-100 border-purple-500">
-            <span className="font-display font-black text-2xl text-purple-700">
-              {(bot.name || bot.bot_name || '?').charAt(0).toUpperCase()}
-            </span>
-          </div>
-        )}
-        <h3 className="comic-heading text-xl">{bot.name || bot.bot_name}</h3>
-        <span className="text-[10px] text-brand-gray-medium font-display mt-1">
+      <Link href={`/companions/community/${bot.id}`} className="p-6 pb-2 hover:bg-gray-50/50 transition">
+        <div className="flex items-center gap-3 mb-3">
+          <TaskMiniMark color="#A855F7" size="lg" />
+          <h3 className="comic-heading text-xl">{bot.name || bot.bot_name}</h3>
+        </div>
+        <span className="text-[10px] text-brand-gray-medium font-display mt-1 block">
           by {bot.author_name}
         </span>
-        <div className="w-full mt-4">
-          <div className="border-t-2 border-dashed border-brand-gray-medium" />
-          <p className="font-body text-sm text-brand-gray-dark text-center mt-3 line-clamp-2">
-            {bot.description || 'A community-posted job pack for OpenClaw agents'}
-          </p>
-        </div>
+        <TaskSheet
+          color="#A855F7"
+          category="community"
+          role="COMMUNITY TASK"
+          summary={bot.description || 'A community-posted task pack for OpenClaw agents'}
+          bullets={[
+            bot.description || 'Community onboarding brief included',
+            `Posted by ${bot.author_name}`,
+            'Review the shared workflow before launch',
+          ]}
+          className="mt-4"
+        />
       </Link>
       <div className="p-6 pt-4 mt-auto">
         <div className="flex items-center justify-center gap-4 mb-4">
@@ -241,7 +215,7 @@ function CommunityCard({ bot }: { bot: CommunityBot }) {
           href={`/companions/community/${bot.id}`}
           className="comic-btn-outline block text-center w-full text-sm"
         >
-          VIEW PACK
+          VIEW TASK
         </Link>
       </div>
     </div>

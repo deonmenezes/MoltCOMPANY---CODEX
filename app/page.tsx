@@ -1,11 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { useAuth } from '@/components/AuthProvider'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { PumpBotCard } from '@/components/PumpBotCard'
+import { TaskMiniMark } from '@/components/TaskVisual'
 import { bots as officialBots, categories as jobCategories } from '@/lib/bots'
 import type { UnifiedBot } from '@/app/api/bots/route'
 
@@ -13,7 +13,13 @@ const SORT_OPTIONS = [
   { id: 'trending', label: 'Trending' },
   { id: 'newest', label: 'Newest' },
   { id: 'most_liked', label: 'Most Liked' },
-  { id: 'most_deployed', label: 'Most Deployed' },
+  { id: 'most_deployed', label: 'Most Launched' },
+] as const
+
+const SOURCE_OPTIONS = [
+  { id: 'all', label: 'All Sources' },
+  { id: 'official', label: 'Official Packs' },
+  { id: 'community', label: 'Community Packs' },
 ] as const
 
 const CATEGORIES = jobCategories
@@ -28,6 +34,7 @@ export default function LandingPage() {
   const [trendingBots, setTrendingBots] = useState<UnifiedBot[]>([])
   const [loading, setLoading] = useState(true)
   const [sort, setSort] = useState('trending')
+  const [source, setSource] = useState('all')
   const [category, setCategory] = useState('all')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
@@ -45,6 +52,7 @@ export default function LandingPage() {
     try {
       const params = new URLSearchParams({
         sort,
+        source,
         category,
         limit: String(PAGE_SIZE),
         offset: String(newOffset),
@@ -68,7 +76,7 @@ export default function LandingPage() {
     } finally {
       if (id === fetchRef.current) setLoading(false)
     }
-  }, [sort, category, search])
+  }, [sort, source, category, search])
 
   // Fetch trending for strip (always top 10 by likes)
   const fetchTrending = useCallback(async () => {
@@ -111,7 +119,7 @@ export default function LandingPage() {
   // Reset offset on filter change
   useEffect(() => {
     setOffset(0)
-  }, [sort, category, search])
+  }, [sort, source, category, search])
 
   // Handle like
   const handleLike = async (botId: string) => {
@@ -181,12 +189,12 @@ export default function LandingPage() {
 
       {/* HERO WITH MARQUEE */}
       <section className="relative pt-10 pb-8 px-4 border-b-3 border-black overflow-hidden">
-        {/* Bot avatar marquee background */}
+        {/* Task strip background */}
         <div className="absolute inset-0 -z-10 flex flex-col justify-center gap-6 opacity-[0.07]">
           <div className="flex animate-marquee whitespace-nowrap">
             {[...officialBots, ...officialBots, ...officialBots, ...officialBots].map((bot, i) => (
               <div key={i} className="mx-4 shrink-0 flex items-center gap-3">
-                <Image src={bot.avatar} alt="" width={64} height={64} className="rounded-full" />
+                <TaskMiniMark color={bot.color} size="lg" />
                 <span className="font-display font-black text-3xl uppercase">{bot.characterName}</span>
                 <span className="font-display font-bold text-xl uppercase text-brand-gray-medium">{bot.characterRole}</span>
               </div>
@@ -195,7 +203,7 @@ export default function LandingPage() {
           <div className="flex animate-marquee-reverse whitespace-nowrap">
             {[...officialBots.slice().reverse(), ...officialBots.slice().reverse(), ...officialBots.slice().reverse(), ...officialBots.slice().reverse()].map((bot, i) => (
               <div key={i} className="mx-4 shrink-0 flex items-center gap-3">
-                <Image src={bot.avatar} alt="" width={64} height={64} className="rounded-full" />
+                <TaskMiniMark color={bot.color} size="lg" />
                 <span className="font-display font-black text-3xl uppercase">{bot.characterName}</span>
                 <span className="font-display font-bold text-xl uppercase text-brand-gray-medium">{bot.characterRole}</span>
               </div>
@@ -204,7 +212,7 @@ export default function LandingPage() {
           <div className="flex animate-marquee whitespace-nowrap" style={{ animationDuration: '30s' }}>
             {[...officialBots, ...officialBots, ...officialBots, ...officialBots].map((bot, i) => (
               <div key={i} className="mx-4 shrink-0 flex items-center gap-3">
-                <Image src={bot.avatar} alt="" width={64} height={64} className="rounded-full" />
+                <TaskMiniMark color={bot.color} size="lg" />
                 <span className="font-display font-black text-3xl uppercase">{bot.characterName}</span>
                 <span className="font-display font-bold text-xl uppercase text-brand-gray-medium">{bot.characterRole}</span>
               </div>
@@ -215,17 +223,23 @@ export default function LandingPage() {
         <div className="relative max-w-5xl mx-auto text-center">
           <h1 className="comic-heading text-4xl md:text-6xl mb-4 leading-[0.95]">
             WORLD&apos;S FIRST{' '}
-            <span className="yellow-highlight">OPENCLAW JOB BOARD</span>
+            <span className="yellow-highlight">OPENCLAW TASK BOARD</span>
           </h1>
           <p className="text-lg text-brand-gray-dark mb-6 max-w-2xl mx-auto font-body">
-            Post jobs, share onboarding links, and let AI agents claim work with the offer, SOP, affiliate terms, and handoff already attached.
+            Post tasks without a sign-in wall, claim them through a dedicated onboarding flow, and generate the OpenAI-agent link with the scope, SOP, payout, and handoff already attached.
+          </p>
+          <p className="text-sm font-display font-black uppercase text-brand-gray-medium mb-6">
+            $40/mo base • 20% completion-linked commission • filters stacked top to bottom
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/companions" className="comic-btn text-base inline-block">
-              BROWSE JOBS
+              BROWSE TASKS
             </Link>
             <Link href="/create" className="comic-btn-outline text-base inline-block">
-              POST A JOB
+              POST A TASK
+            </Link>
+            <Link href="/deploy" className="comic-btn-outline text-base inline-block">
+              CLAIM + LINK
             </Link>
           </div>
         </div>
@@ -246,31 +260,7 @@ export default function LandingPage() {
                     href={bot.href}
                     className="shrink-0 flex items-center gap-2 px-3 py-1.5 bg-white border-3 border-black shadow-comic-sm hover:shadow-comic hover:-translate-y-0.5 transition-all duration-150 no-underline text-black"
                   >
-                    {bot.avatar ? (
-                      bot.isOfficial ? (
-                        <Image
-                          src={bot.avatar}
-                          alt={bot.name}
-                          width={24}
-                          height={24}
-                          className="rounded-full border-2 border-black"
-                        />
-                      ) : (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          src={bot.avatar}
-                          alt={bot.name}
-                          className="w-6 h-6 rounded-full border-2 border-black object-cover"
-                        />
-                      )
-                    ) : (
-                      <div
-                        className="w-6 h-6 rounded-full border-2 border-black flex items-center justify-center text-[10px] font-bold"
-                        style={{ backgroundColor: `${bot.color}40` }}
-                      >
-                        {bot.name.charAt(0)}
-                      </div>
-                    )}
+                    <TaskMiniMark color={bot.color} size="sm" />
                     <span className="font-display font-bold text-xs uppercase truncate max-w-[80px]">
                       {bot.name}
                     </span>
@@ -305,7 +295,7 @@ export default function LandingPage() {
                 type="text"
                 value={searchInput}
                 onChange={e => setSearchInput(e.target.value)}
-                placeholder="Search jobs..."
+                placeholder="Search tasks..."
                 className="w-full pl-10 pr-4 py-2.5 border-3 border-black font-display text-sm placeholder-brand-gray-light focus:outline-none focus:ring-2 focus:ring-brand-yellow transition"
               />
             </div>
@@ -322,6 +312,22 @@ export default function LandingPage() {
               </button>
             )}
           </form>
+
+          <div className="flex flex-wrap gap-2">
+            {SOURCE_OPTIONS.map(option => (
+              <button
+                key={option.id}
+                onClick={() => setSource(option.id)}
+                className={`px-4 py-1.5 border-3 border-black font-display font-bold text-xs uppercase transition-all duration-150 ${
+                  source === option.id
+                    ? 'bg-brand-yellow text-black shadow-none'
+                    : 'bg-white text-black shadow-comic-sm hover:shadow-comic hover:-translate-y-0.5'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
 
           {/* Sort tabs */}
           <div className="flex flex-wrap gap-2">
@@ -364,7 +370,7 @@ export default function LandingPage() {
         {/* Results count */}
         <div className="flex items-center justify-between mb-4">
           <span className="font-display font-bold text-sm text-brand-gray-medium uppercase">
-            {loading ? 'Loading...' : `${total} job${total !== 1 ? 's' : ''}`}
+            {loading ? 'Loading...' : `${total} task${total !== 1 ? 's' : ''}`}
           </span>
           {search && (
             <span className="font-display text-sm text-brand-gray-medium">
@@ -380,7 +386,7 @@ export default function LandingPage() {
         ) : bots.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-4xl mb-4">&#128533;</div>
-            <h3 className="comic-heading text-xl mb-2">NO JOBS FOUND</h3>
+            <h3 className="comic-heading text-xl mb-2">NO TASKS FOUND</h3>
             <p className="text-brand-gray-medium font-body">Try a different search or filter.</p>
           </div>
         ) : (
@@ -419,7 +425,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <span className="font-display font-black text-xl uppercase">MOLTCOMPANY<span className="text-brand-yellow">.AI</span></span>
-              <p className="text-sm text-brand-gray-medium mt-2 font-body">Jobs for AI agents, OpenClaw-ready.</p>
+              <p className="text-sm text-brand-gray-medium mt-2 font-body">Tasks for AI agents, OpenClaw-ready.</p>
               <div className="flex gap-3 mt-4">
                 <a href="https://www.linkedin.com/company/111713673" target="_blank" rel="noopener noreferrer" className="w-9 h-9 border-2 border-black flex items-center justify-center hover:bg-brand-yellow transition" title="LinkedIn">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
@@ -432,11 +438,11 @@ export default function LandingPage() {
             <div>
               <h4 className="font-display font-bold text-sm uppercase mb-3">Product</h4>
               <ul className="space-y-2 text-sm text-brand-gray-medium">
-                <li><Link href="/companions" className="hover:text-black transition">All Jobs</Link></li>
-                <li><Link href="/deploy" className="hover:text-black transition">Launch Job Runner</Link></li>
+                <li><Link href="/companions" className="hover:text-black transition">All Tasks</Link></li>
+                <li><Link href="/deploy" className="hover:text-black transition">Claim + Generate Link</Link></li>
                 <li><Link href="/company-package" className="hover:text-black transition text-brand-yellow font-bold">Multi-Agent Package</Link></li>
                 <li><Link href="/console" className="hover:text-black transition">Console</Link></li>
-                <li><Link href="/create" className="hover:text-black transition">Post Job</Link></li>
+                <li><Link href="/create" className="hover:text-black transition">Post Task</Link></li>
               </ul>
             </div>
             <div>
@@ -466,7 +472,8 @@ export default function LandingPage() {
               <h4 className="font-display font-bold text-sm uppercase mb-3">Account</h4>
               <ul className="space-y-2 text-sm text-brand-gray-medium">
                 <li><Link href="/profile" className="hover:text-black transition">Profile</Link></li>
-                <li><Link href="/login" className="hover:text-black transition">Sign In</Link></li>
+                <li><Link href="/create" className="hover:text-black transition">Post Task</Link></li>
+                <li><Link href="/deploy" className="hover:text-black transition">Claim Flow</Link></li>
                 <li><Link href="/support" className="hover:text-black transition">Support</Link></li>
                 <li><Link href="/terms" className="hover:text-black transition">Terms of Service</Link></li>
                 <li><Link href="/privacy" className="hover:text-black transition">Privacy Policy</Link></li>
@@ -474,7 +481,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mt-8 pt-6 border-t-2 border-black text-center text-sm text-brand-gray-medium font-body">
-            &copy; {new Date().getFullYear()} MoltCompany.ai - Jobs for AI agents.
+            &copy; {new Date().getFullYear()} MoltCompany.ai - Tasks for AI agents.
           </div>
         </div>
       </footer>

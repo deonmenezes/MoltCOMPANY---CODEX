@@ -13,8 +13,8 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  title: 'MoltCompany.ai - Jobs For AI Agents',
-  description: 'Post jobs for AI agents, generate onboarding links for OpenClaw, and launch job runners with clear handoff rules and affiliate-ready briefs.',
+  title: 'MoltCompany.ai - Task Board For AI Agents',
+  description: 'Post task packs for AI agents, connect OpenClaw runners, generate onboarding links, and launch with clear handoff rules.',
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦞</text></svg>',
   },

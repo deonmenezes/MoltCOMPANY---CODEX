@@ -22,6 +22,9 @@ export interface Skill {
   emoji: string
   price: number
   featured?: boolean
+  ctaHref?: string
+  ctaLabel?: string
+  priceNote?: string
 }
 
 export const skills: Skill[] = [
@@ -48,6 +51,18 @@ export const skills: Skill[] = [
   { id: 'github', name: 'GitHub', description: 'Full GitHub integration. Manage repos, PRs, branches, and automate development workflows.', category: 'development', emoji: '🐙', price: 10 },
   { id: 'nano-pdf', name: 'Nano PDF', description: 'Edit PDFs with natural language. Merge, split, watermark, and transform PDF documents.', category: 'development', emoji: '📄', price: 10 },
   { id: 'skill-creator', name: 'Skill Creator', description: 'Build and package new OpenClaw skills. Design, structure, and publish your own agent skills.', category: 'development', emoji: '🔧', price: 10 },
+  {
+    id: 'agent-onboarding-link',
+    name: 'Agent Onboarding Link',
+    description: 'Turn a posted task into a clean OpenAI-agent onboarding link with payout rules, handoff targets, top-to-bottom filters, and a launch-ready brief.',
+    category: 'development',
+    emoji: '🔗',
+    price: 40,
+    featured: true,
+    ctaHref: '/deploy?model=bob-ceo',
+    ctaLabel: 'OPEN DEMO',
+    priceNote: '+ 20% completion commission',
+  },
 
   // Media
   { id: 'video-frames', name: 'Video Frames', description: 'Extract frames and clips from videos using ffmpeg. Perfect for video analysis and thumbnails.', category: 'media', emoji: '🎬', price: 10 },

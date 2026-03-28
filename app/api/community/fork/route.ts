@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const authUser = await getUser(req)
     if (!authUser?.phone) {
       return NextResponse.json(
-        { error: 'Only phone-verified users can fork companions' },
+        { error: 'Only phone-verified users can fork public job packs' },
         { status: 403 }
       )
     }
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       .eq('status', 'published')
 
     if ((count || 0) >= 3) {
-      return NextResponse.json({ error: 'You can publish a maximum of 3 companions' }, { status: 400 })
+      return NextResponse.json({ error: 'You can publish a maximum of 3 public job packs' }, { status: 400 })
     }
 
     // Get original bot
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         icon_url: original.icon_url,
         character_file: original.character_file,
         soul_md: original.soul_md,
-        role: original.role,
+        bot_role: original.bot_role || original.role,
         color: original.color,
         tools_config: original.tools_config,
         category: original.category || 'other',
@@ -96,8 +96,8 @@ export async function POST(req: NextRequest) {
         forked_from: original.id,
         upvotes: 0,
         downvotes: 0,
-        view_count: 0,
-        deploy_count: 0,
+        likes: 0,
+        deploys: 0,
         fork_count: 0,
         status: 'published',
       })
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('Fork error:', error)
-      return NextResponse.json({ error: 'Failed to fork companion' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fork job pack' }, { status: 500 })
     }
 
     // Increment fork count on original

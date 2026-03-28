@@ -3,9 +3,10 @@
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import Image from 'next/image'
 import Link from 'next/link'
 import { bots, buildAffiliateLink } from '@/lib/bots'
+import { TaskMiniMark, TaskSheet } from '@/components/TaskVisual'
+import { formatCompensation } from '@/lib/task-onboarding'
 
 type Review = {
   id: string
@@ -126,8 +127,8 @@ export default function CompanionDetailPage() {
     return (
       <div className="min-h-screen bg-white pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="comic-heading text-3xl mb-4">JOB NOT FOUND</h1>
-          <Link href="/companions" className="comic-btn inline-block">BROWSE JOBS</Link>
+          <h1 className="comic-heading text-3xl mb-4">TASK NOT FOUND</h1>
+          <Link href="/companions" className="comic-btn inline-block">BROWSE TASKS</Link>
         </div>
       </div>
     )
@@ -144,7 +145,7 @@ export default function CompanionDetailPage() {
 
         {/* Breadcrumb */}
         <div className="text-sm text-brand-gray-medium mb-6 font-display">
-          <Link href="/companions" className="hover:text-black transition">Jobs</Link>
+          <Link href="/companions" className="hover:text-black transition">Tasks</Link>
           <span className="mx-2">/</span>
           <span className="text-black font-bold">{bot.characterName}</span>
         </div>
@@ -152,26 +153,19 @@ export default function CompanionDetailPage() {
         {/* Product section */}
         <div className="grid md:grid-cols-2 gap-10 mb-16">
 
-          {/* Left: Avatar + quick info */}
+          {/* Left: Task brief + quick info */}
           <div>
             <div className="comic-card p-8 flex flex-col items-center">
               <div className="h-2 w-full -mt-8 -mx-8 mb-6" style={{ backgroundColor: bot.color, marginLeft: '-2rem', marginRight: '-2rem', width: 'calc(100% + 4rem)' }} />
-              {bot.avatar ? (
-                <Image
-                  src={bot.avatar}
-                  alt={bot.characterName}
-                  width={180}
-                  height={180}
-                  className="rounded-full avatar-comic bg-brand-gray"
-                />
-              ) : (
-                <div
-                  className="w-[180px] h-[180px] rounded-full avatar-comic flex items-center justify-center"
-                  style={{ backgroundColor: `${bot.color}30`, border: '4px solid black' }}
-                >
-                  <span className="font-display font-black text-7xl text-black">{bot.characterName.charAt(0)}</span>
-                </div>
-              )}
+              <TaskSheet
+                color={bot.color}
+                category={bot.category}
+                role={bot.characterRole}
+                summary={bot.tagline}
+                bullets={bot.onboardingItems}
+                label="Task Outline"
+                className="w-full"
+              />
               <div className="mt-6 text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Stars rating={Math.round(avgRating)} />
@@ -197,7 +191,7 @@ export default function CompanionDetailPage() {
             <p className="text-brand-gray-dark font-body text-lg mb-6">{bot.description}</p>
 
             <div className="comic-card p-4 mb-6">
-              <div className="text-xs font-display font-bold uppercase text-brand-gray-medium mb-1">Job Snapshot</div>
+              <div className="text-xs font-display font-bold uppercase text-brand-gray-medium mb-1">Task Snapshot</div>
               <p className="text-sm text-black font-body italic">&ldquo;{bot.tagline}&rdquo;</p>
             </div>
 
@@ -227,12 +221,15 @@ export default function CompanionDetailPage() {
                 <span className="comic-heading text-4xl">${bot.monthlyPrice}</span>
                 <span className="text-brand-gray-medium font-medium">/month</span>
               </div>
-              <p className="text-xs text-brand-gray-medium mb-4">Spin up the job runner, keep your own model key, and route work with a generated onboarding link.</p>
+              <p className="text-xs font-display font-black uppercase text-brand-gray-medium mb-3">
+                {formatCompensation(bot.monthlyPrice, bot.commissionRate ?? 20, bot.compensationModel ?? 'completion')}
+              </p>
+              <p className="text-xs text-brand-gray-medium mb-4">Claim the task, adjust the payout and handoff rules, and generate a cleaner onboarding link for the OpenAI agent.</p>
               <Link
                 href={`/deploy?model=${bot.id}`}
                 className="comic-btn block text-center w-full text-lg"
               >
-                CLAIM THIS JOB
+                CLAIM + GENERATE LINK
               </Link>
             </div>
           </div>
@@ -241,7 +238,7 @@ export default function CompanionDetailPage() {
         <section className="mb-16">
           <div className="grid md:grid-cols-2 gap-8">
             <div className="comic-card p-6">
-              <h2 className="comic-heading text-2xl mb-4">AGENT ONBOARDING LINK</h2>
+              <h2 className="comic-heading text-2xl mb-4">TASK ONBOARDING LINK</h2>
               <p className="text-sm text-brand-gray-medium mb-4">{bot.affiliateHeadline}</p>
               <div className="p-3 border-3 border-black bg-gray-50 font-mono text-xs break-all mb-4">
                 {affiliateLink}
@@ -309,7 +306,7 @@ export default function CompanionDetailPage() {
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder={`What do you think about the ${bot.characterName} job pack?`}
+                  placeholder={`What do you think about the ${bot.characterName} task pack?`}
                   maxLength={500}
                   rows={3}
                   className="w-full px-4 py-3 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition resize-none"
@@ -327,7 +324,7 @@ export default function CompanionDetailPage() {
               </div>
             ) : (
               <div className="comic-card p-6 mb-8 text-center">
-                <p className="text-brand-gray-medium mb-3">Sign in to leave a review</p>
+                <p className="text-brand-gray-medium mb-3">Guest review posting is paused while the onboarding flow is open-access.</p>
               </div>
             )}
 
@@ -364,7 +361,7 @@ export default function CompanionDetailPage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-brand-gray-medium">No reviews yet. Be the first to review this job pack.</p>
+                <p className="text-brand-gray-medium">No reviews yet. Be the first to review this task pack.</p>
               </div>
             )}
           </div>

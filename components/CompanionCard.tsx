@@ -1,8 +1,8 @@
 'use client'
 
-import Image from 'next/image'
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import { TaskMiniMark, TaskSheet } from '@/components/TaskVisual'
 
 interface CompanionCardProps {
   instance: {
@@ -28,7 +28,7 @@ interface CompanionCardProps {
 
 const statusConfig: Record<string, { dot: string; label: string; bg: string }> = {
   running: { dot: 'bg-green-500', label: 'ONLINE', bg: 'bg-green-50' },
-  provisioning: { dot: 'bg-yellow-500 animate-pulse', label: 'DEPLOYING', bg: 'bg-yellow-50' },
+  provisioning: { dot: 'bg-yellow-500 animate-pulse', label: 'STARTING', bg: 'bg-yellow-50' },
   stopped: { dot: 'bg-gray-500', label: 'STOPPED', bg: 'bg-gray-50' },
   failed: { dot: 'bg-red-500', label: 'FAILED', bg: 'bg-red-50' },
   payment_failed: { dot: 'bg-red-500', label: 'PAYMENT FAILED', bg: 'bg-red-50' },
@@ -47,8 +47,8 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
   const status = statusConfig[instance.status] || { dot: 'bg-gray-500', label: instance.status.toUpperCase(), bg: 'bg-gray-50' }
   const color = instance.companion_color || '#FFD600'
   const isLoading = actionLoading === instance.id
-  const name = instance.companion_name || 'Companion'
-  const role = instance.companion_role || 'AI Assistant'
+  const name = instance.companion_name || 'Task Runner'
+  const role = instance.companion_role || 'AI Task'
 
   const [showKeyForm, setShowKeyForm] = useState(false)
   const [newKey, setNewKey] = useState('')
@@ -91,7 +91,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
   }
 
   const handleCancelSubscription = async () => {
-    if (!confirm(`Cancel subscription and terminate ${name}? This will permanently shut down this companion and cancel your billing.`)) return
+    if (!confirm(`Cancel subscription and terminate ${name}? This will permanently shut down this task runner and cancel your billing.`)) return
     setCancelingSubscription(true)
     try {
       const res = await fetch('/api/instance', {
@@ -150,28 +150,10 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
       {/* Color bar */}
       <div className="h-2" style={{ backgroundColor: color }} />
 
-      {/* Header: Avatar + Name + Status */}
+      {/* Header: Task + Name + Status */}
       <div className="p-5 pb-3">
         <div className="flex items-start gap-4">
-          {/* Avatar */}
-          <div
-            className="w-14 h-14 rounded-full border-3 border-black flex-shrink-0 flex items-center justify-center overflow-hidden"
-            style={{ backgroundColor: `${color}20` }}
-          >
-            {instance.companion_avatar ? (
-              <Image
-                src={instance.companion_avatar}
-                alt={name}
-                width={56}
-                height={56}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-2xl font-display font-black" style={{ color }}>
-                {name.charAt(0)}
-              </span>
-            )}
-          </div>
+          <TaskMiniMark color={color} size="lg" />
 
           {/* Name + Role */}
           <div className="flex-1 min-w-0">
@@ -192,6 +174,20 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
             <span className="text-[10px] font-display font-bold uppercase">{status.label}</span>
           </div>
         </div>
+      </div>
+
+      <div className="px-5 pb-4">
+        <TaskSheet
+          color={color}
+          role={role}
+          summary={`${name} is configured on ${formatModel(instance.model_name)} and connected through ${instance.channel}.`}
+          bullets={[
+            instance.public_ip ? `Runner endpoint ready at ${instance.public_ip}` : 'Runner endpoint is still being assigned',
+            `Region: ${instance.region}`,
+            `Created: ${new Date(instance.created_at).toLocaleDateString()}`,
+          ]}
+          compact
+        />
       </div>
 
       {/* Info grid */}
@@ -240,7 +236,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
         <div className="mx-5 mb-4 p-3 border-3 border-green-400 bg-green-50">
           <div className="text-[10px] font-display font-bold uppercase text-green-700 mb-1">WhatsApp Connected</div>
           <p className="text-[10px] text-green-600">
-            Messages to your WhatsApp Business number are routed through MoltCompany.ai to this companion.
+            Messages to your WhatsApp Business number are routed through MoltCompany.ai to this task runner.
           </p>
           <p className="text-[10px] text-green-600 mt-1">
             Make sure the webhook URL in your Meta App Dashboard points to: <code className="font-mono">https://moltcompany.ai/api/whatsapp/webhook</code>
@@ -278,7 +274,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
             className="w-full px-3 py-2 text-xs border-2 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow mb-2"
           />
           <p className="text-[10px] text-brand-gray-medium mb-2">
-            This will redeploy your companion with the new key. Downtime: ~2 minutes.
+            This will redeploy your task runner with the new key. Downtime: ~2 minutes.
           </p>
           <div className="flex gap-2">
             <button
@@ -307,7 +303,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
               disabled={retryingLaunch}
               className="comic-btn text-xs py-1.5 px-3 disabled:opacity-50"
             >
-              {retryingLaunch ? 'LAUNCHING...' : 'LAUNCH NOW'}
+              {retryingLaunch ? 'STARTING...' : 'START NOW'}
             </button>
           )}
           {instance.public_ip && instance.status === 'running' && (
@@ -317,7 +313,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
               rel="noopener noreferrer"
               className="comic-btn text-xs py-1.5 px-3"
             >
-              OPEN UI
+              OPEN RUNNER
             </a>
           )}
           {instance.status === 'running' && (
@@ -352,7 +348,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
           {['running', 'stopped', 'provisioning', 'pending_payment', 'failed'].includes(instance.status) && (
             <button
               onClick={() => {
-                if (confirm(`Terminate ${name}? This will permanently delete this companion and all its data.`)) {
+                if (confirm(`Terminate ${name}? This will permanently delete this task runner and all its data.`)) {
                   onAction(instance.id, 'terminate')
                 }
               }}

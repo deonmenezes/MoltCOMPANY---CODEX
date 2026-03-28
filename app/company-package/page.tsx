@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { bots } from '@/lib/bots'
+import { TaskMiniMark, TaskSheet } from '@/components/TaskVisual'
 
 export default function CompanyPackagePage() {
   const bob = bots.find((b) => b.id === 'bob-ceo')!
@@ -22,7 +22,7 @@ export default function CompanyPackagePage() {
                 <span className="yellow-highlight">COMPANY FOR $300/MO</span>
               </h1>
               <p className="text-lg text-brand-gray-dark font-body mb-6 max-w-lg">
-                Why hire one companion at $40/month when you can get all 9 for $300? That&apos;s a full AI department &mdash; CEO, Legal, Sales, Engineering, HR, Finance, and more &mdash; working 24/7 on your Telegram.
+                Why launch one task runner at $40/month when you can get all 9 for $300? That&apos;s a full AI department &mdash; operations, sales, compliance, onboarding, dispatch, and more &mdash; working 24/7 on your Telegram.
               </p>
 
               <div className="space-y-3 mb-8">
@@ -46,16 +46,10 @@ export default function CompanyPackagePage() {
               </Link>
             </div>
 
-            {/* Bob showcase */}
+            {/* Lead task showcase */}
             <div className="comic-card p-6 text-center max-w-xs w-full">
               <div className="relative inline-block mb-4">
-                <Image
-                  src={bob.avatar}
-                  alt={bob.characterName}
-                  width={120}
-                  height={120}
-                  className="avatar-comic rounded-full bg-brand-gray"
-                />
+                <TaskMiniMark color={bob.color} size="lg" className="mx-auto" />
                 <div className="absolute -top-2 -right-2 bg-brand-yellow border-2 border-black px-2 py-0.5 font-display font-black text-xs uppercase rotate-6 shadow-comic-sm">
                   LEADS THE TEAM
                 </div>
@@ -96,35 +90,29 @@ export default function CompanyPackagePage() {
               ALL INCLUDED.
             </h2>
             <p className="text-lg text-black font-body max-w-xl mx-auto mt-4">
-              8 specialized AI employees + Bob the CEO. Each runs on a dedicated AWS server, connected to your Telegram.
+              8 specialized task packs + the lead operations workflow. Each runs on a dedicated AWS server, connected to your Telegram.
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {team.map((bot) => (
               <div key={bot.id} className="comic-card flex flex-col">
-                <div className="h-2" style={{ backgroundColor: bot.color }} />
-                <div className="p-6 flex flex-col items-center text-center">
-                  <Image
-                    src={bot.avatar}
-                    alt={bot.characterName}
-                    width={80}
-                    height={80}
-                    className="avatar-comic rounded-full bg-brand-gray mb-3"
-                  />
-                  <h3 className="comic-heading text-2xl">{bot.characterName}</h3>
-                  <span
-                    className="inline-block mt-1 px-3 py-0.5 text-xs font-display font-bold uppercase border-2 border-black"
-                    style={{ backgroundColor: bot.color, color: bot.color === '#FFD600' ? '#000' : '#fff' }}
-                  >
-                    {bot.characterRole}
-                  </span>
-                  <div className="w-full mt-4">
-                    <div className="border-t-2 border-dashed border-brand-gray-medium" />
-                    <p className="font-body text-sm text-brand-gray-dark text-center mt-3">
-                      {bot.tagline}
-                    </p>
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <TaskMiniMark color={bot.color} />
+                    <div>
+                      <h3 className="comic-heading text-2xl">{bot.characterName}</h3>
+                      <p className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">{bot.characterRole}</p>
+                    </div>
                   </div>
+                  <TaskSheet
+                    color={bot.color}
+                    category={bot.category}
+                    role={bot.characterRole}
+                    summary={bot.tagline}
+                    bullets={bot.exampleDeliverables}
+                    compact
+                  />
                 </div>
               </div>
             ))}
@@ -160,7 +148,7 @@ export default function CompanyPackagePage() {
             <span className="text-brand-yellow">ENTIRE COMPANY?</span>
           </h2>
           <p className="text-xl text-gray-400 mb-8 font-body">
-            Contact our support team to get the full company package set up. We&apos;ll have all 9 companions deployed and running on your Telegram within the hour.
+            Contact our support team to get the full company package set up. We&apos;ll have all 9 task packs deployed and running on your Telegram within the hour.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
@@ -175,7 +163,7 @@ export default function CompanyPackagePage() {
           </div>
 
           <p className="text-brand-yellow text-sm font-display font-bold uppercase">
-            $300/month &bull; All 9 companions &bull; Cancel anytime
+            $300/month &bull; All 9 task packs &bull; Cancel anytime
           </p>
         </div>
       </section>

@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
+import { isSupabaseConfigured } from '@/lib/supabase'
 import { sanitizeUrl, rateLimit } from '@/lib/sanitize'
+import { buildGuestEmail } from '@/lib/task-onboarding'
+
+export const dynamic = 'force-dynamic'
+
+function sanitizeGuestName(name?: string) {
+  return (name || 'Guest Operator').trim().slice(0, 80) || 'Guest Operator'
+}
+
+function sanitizeGuestEmail(email?: string) {
+  const trimmed = (email || '').trim().toLowerCase()
+  if (!trimmed) return ''
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) ? trimmed.slice(0, 120) : ''
+}
 
 export async function GET(req: NextRequest) {
+  if (!isSupabaseConfigured) {
+    return NextResponse.json({ bots: [], total: 0 })
+  }
+
   const sort = req.nextUrl.searchParams.get('sort') || 'newest'
   const search = req.nextUrl.searchParams.get('q') || ''
   const category = req.nextUrl.searchParams.get('category') || ''
@@ -45,11 +63,20 @@ export async function GET(req: NextRequest) {
 
   const { data: bots } = await query.range(offset, offset + limit - 1)
 
-  // Get total count for pagination
-  const { count } = await supabase
+  let countQuery = supabase
     .from('community_bots')
     .select('id', { count: 'exact', head: true })
     .eq('status', 'published')
+
+  if (search.trim()) {
+    countQuery = countQuery.or(`name.ilike.%${search}%,description.ilike.%${search}%,bot_role.ilike.%${search}%,bot_name.ilike.%${search}%`)
+  }
+
+  if (category) {
+    countQuery = countQuery.eq('category', category)
+  }
+
+  const { count } = await countQuery
 
   return NextResponse.json({
     bots: (bots || []).map(bot => ({
@@ -65,17 +92,29 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const authUser = await getUser(req)
-    if (!authUser?.email) {
+    if (!isSupabaseConfigured) {
       return NextResponse.json(
-        { error: 'Sign in with Google to post jobs' },
-        { status: 403 }
+        { error: 'Community publishing is unavailable until Supabase is configured' },
+        { status: 503 }
       )
     }
 
-    // Get or create user
-    const lookupField = authUser.email ? 'email' : 'phone'
-    const lookupValue = (authUser.email || authUser.phone)!
+    const authUser = await getUser(req)
+    const payload = await req.json()
+    const ip = (req.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim()
+    const guestName = sanitizeGuestName(payload.guest_name || payload.poster_name || payload.operator_name)
+    const guestEmail = sanitizeGuestEmail(payload.guest_email || payload.poster_email)
+
+    let lookupField: 'email' | 'phone'
+    let lookupValue: string
+
+    if (authUser?.email || authUser?.phone) {
+      lookupField = authUser.email ? 'email' : 'phone'
+      lookupValue = (authUser.email || authUser.phone)!
+    } else {
+      lookupField = 'email'
+      lookupValue = guestEmail || buildGuestEmail(guestName, ip)
+    }
 
     let { data: user } = await supabase
       .from('users')
@@ -87,9 +126,9 @@ export async function POST(req: NextRequest) {
       const { data: newUser } = await supabase
         .from('users')
         .insert({
-          email: authUser.email || null,
-          phone: authUser.phone || null,
-          name: authUser.user_metadata?.full_name || null,
+          email: lookupField === 'email' ? lookupValue : null,
+          phone: lookupField === 'phone' ? lookupValue : null,
+          name: authUser?.user_metadata?.full_name || guestName,
         })
         .select('id')
         .single()
@@ -115,13 +154,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limit: 5 publishes per minute
-    const ip = req.headers.get('x-forwarded-for') || 'unknown'
     const { success: rateLimitOk } = rateLimit(`community-publish:${ip}`, { maxRequests: 5, windowMs: 60_000 })
     if (!rateLimitOk) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
     }
 
-    const { name, description, icon_url, character_file, role, color, category, tags, captcha_token } = await req.json()
+    const {
+      name,
+      description,
+      icon_url,
+      character_file,
+      role,
+      color,
+      category,
+      tags,
+      captcha_token,
+    } = payload
 
     // Verify Turnstile CAPTCHA
     if (process.env.TURNSTILE_SECRET_KEY) {
@@ -153,15 +201,15 @@ export async function POST(req: NextRequest) {
     const safeColor = /^#[0-9A-Fa-f]{6}$/.test(color || '') ? color : null
 
     // Validate category
-    const validCategories = ['productivity', 'creative', 'business', 'education', 'entertainment', 'developer', 'health', 'social', 'finance', 'other']
+    const validCategories = ['productivity', 'creative', 'business', 'education', 'entertainment', 'developer', 'health', 'operations', 'social', 'finance', 'other']
     const safeCategory = validCategories.includes(category) ? category : 'other'
 
     const { data: bot, error } = await supabase
       .from('community_bots')
       .insert({
         user_id: user.id,
-        author_name: authUser.user_metadata?.full_name || authUser.phone || 'Anonymous',
-        author_email: authUser.email || authUser.phone || '',
+        author_name: authUser?.user_metadata?.full_name || authUser?.phone || guestName,
+        author_email: authUser?.email || authUser?.phone || guestEmail || lookupValue,
         name: name.trim().slice(0, 60),
         bot_name: name.trim().slice(0, 60),
         description: (description || '').slice(0, 300),
@@ -196,6 +244,13 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    if (!isSupabaseConfigured) {
+      return NextResponse.json(
+        { error: 'Community publishing is unavailable until Supabase is configured' },
+        { status: 503 }
+      )
+    }
+
     const authUser = await getUser(req)
     if (!authUser?.email && !authUser?.phone) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

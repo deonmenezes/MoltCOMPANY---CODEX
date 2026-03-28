@@ -1,0 +1,10 @@
+[GET] http://127.0.0.1:3105/api/bots?sort=trending&source=all&category=all&limit=30&offset=0 => [200] OK
+[GET] http://127.0.0.1:3105/api/bots?sort=most_liked&limit=10 => [200] OK
+[GET] http://127.0.0.1:3105/api/bots?sort=trending&source=all&category=all&limit=30&offset=0 => [200] OK
+[GET] http://127.0.0.1:3105/api/bots?sort=most_liked&limit=10 => [200] OK
+[GET] http://127.0.0.1:3105/create?_rsc=19zvn => [200] OK
+[GET] http://127.0.0.1:3105/_next/static/webpack/4862052796c0f82b.webpack.hot-update.json => [200] OK
+[GET] http://127.0.0.1:3105/create?_rsc=19zvn => [200] OK
+[GET] http://127.0.0.1:3105/create?_rsc=1ag75 => [200] OK
+[GET] http://127.0.0.1:3105/create?_rsc=1ag75 => [200] OK
+[POST] http://127.0.0.1:3105/api/community => [503] Service Unavailable

@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
-import { useState } from 'react'
 import type { UnifiedBot } from '@/app/api/bots/route'
+import { TaskMiniMark, TaskSheet } from '@/components/TaskVisual'
+import { formatCompensation } from '@/lib/task-onboarding'
 
 interface PumpBotCardProps {
   bot: UnifiedBot
@@ -13,7 +13,6 @@ interface PumpBotCardProps {
 }
 
 export function PumpBotCard({ bot, isLiked, onLike, likingId }: PumpBotCardProps) {
-  const [imgError, setImgError] = useState(false)
   const isLiking = likingId === bot.id
   const communityNumericId = bot.id.startsWith('community-') ? bot.id.replace('community-', '') : null
 
@@ -27,40 +26,10 @@ export function PumpBotCard({ bot, isLiked, onLike, likingId }: PumpBotCardProps
         href={bot.isOfficial ? `/companion/${bot.id}` : `/companions/community/${communityNumericId}`}
         className="p-5 pb-3 hover:bg-gray-50/50 transition"
       >
-        {/* Top: Avatar + Name row */}
+        {/* Top: Task identity */}
         <div className="flex items-start gap-4">
-          {/* Avatar - larger */}
-          {bot.avatar && !imgError ? (
-            bot.isOfficial ? (
-              <Image
-                src={bot.avatar}
-                alt={bot.name}
-                width={72}
-                height={72}
-                className="avatar-comic rounded-full bg-brand-gray shrink-0"
-                onError={() => setImgError(true)}
-              />
-            ) : (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={bot.avatar}
-                alt={bot.name}
-                className="w-[72px] h-[72px] avatar-comic rounded-full bg-brand-gray shrink-0 object-cover"
-                onError={() => setImgError(true)}
-              />
-            )
-          ) : (
-            <div
-              className="w-[72px] h-[72px] rounded-full avatar-comic flex items-center justify-center shrink-0"
-              style={{ backgroundColor: `${bot.color}30`, borderColor: bot.color }}
-            >
-              <span className="font-display font-black text-2xl text-black">
-                {bot.name.charAt(0)}
-              </span>
-            </div>
-          )}
+          <TaskMiniMark color={bot.color} size="lg" />
 
-          {/* Name + badge */}
           <div className="min-w-0 flex-1 pt-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="comic-heading text-xl leading-tight">{bot.name}</h3>
@@ -89,10 +58,19 @@ export function PumpBotCard({ bot, isLiked, onLike, likingId }: PumpBotCardProps
           </div>
         </div>
 
-        {/* Description */}
-        <p className="text-sm text-brand-gray-dark font-body mt-3 leading-relaxed line-clamp-2">
-          {bot.description}
-        </p>
+        <TaskSheet
+          color={bot.color}
+          category={bot.category}
+          role={bot.role || 'AI Task'}
+          summary={bot.description}
+          bullets={[
+            bot.description,
+            bot.creator === 'OFFICIAL' ? 'Official launch-ready workflow included' : `Posted by ${bot.creator}`,
+            bot.deployCount > 0 ? `${bot.deployCount} launches recorded` : 'Ready to be claimed and launched',
+          ]}
+          compact
+          className="mt-4"
+        />
       </Link>
 
       {/* Stats + Action row */}
@@ -138,13 +116,17 @@ export function PumpBotCard({ bot, isLiked, onLike, likingId }: PumpBotCardProps
           )}
         </div>
 
-        {/* CTA */}
-        <Link
-          href={bot.href}
-          className="comic-btn text-xs px-4 py-2 no-underline"
-        >
-          {bot.isOfficial ? 'CLAIM JOB' : 'VIEW PACK'}
-        </Link>
+        <div className="flex items-center gap-3">
+          <span className="hidden xl:inline text-[10px] font-display font-black uppercase text-black">
+            {formatCompensation(40, 20, 'completion')}
+          </span>
+          <Link
+            href={bot.href}
+            className="comic-btn text-xs px-4 py-2 no-underline"
+          >
+            {bot.isOfficial ? 'CLAIM + LINK' : 'VIEW TASK'}
+          </Link>
+        </div>
       </div>
     </div>
   )

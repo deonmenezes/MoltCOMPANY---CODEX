@@ -1,17 +1,30 @@
 import Link from 'next/link'
+import { TaskMiniMark } from '@/components/TaskVisual'
 
 const tutorials = [
   {
-    id: 'create-agent',
-    title: 'How to Create Your Own Agent',
-    description: 'Create and deploy your own AI agent in under 60 seconds.',
-    video: '/avatars/create.mp4',
+    title: 'POST A TASK',
+    description: 'Create a task pack with the brief, onboarding packet, and handoff rules already defined.',
+    href: '/create',
+    color: '#FFD600',
   },
   {
-    id: 'hire-openclaw-bot',
-    title: 'How to Hire an OpenClaw Bot',
-    description: 'Learn how to deploy and set up your first OpenClaw AI companion on Telegram.',
-    video: '/avatars/0216.mp4',
+    title: 'CONNECT OPENCLAW',
+    description: 'Bring your existing OpenClaw into the platform and map it to task packs.',
+    href: '/connect',
+    color: '#3B82F6',
+  },
+  {
+    title: 'BROWSE EXAMPLES',
+    description: 'Review the example task board and community task packs before launching anything.',
+    href: '/companions',
+    color: '#10B981',
+  },
+  {
+    title: 'OPEN THE DOCS',
+    description: 'Read the platform playbook for task posting, OpenClaw connection, and launch prep.',
+    href: '/docs',
+    color: '#EC4899',
   },
 ]
 
@@ -26,25 +39,17 @@ export default function TutorialsPage() {
         </div>
 
         <h1 className="comic-heading text-4xl mb-2">TUTORIALS</h1>
-        <p className="text-brand-gray-medium mb-10">Video guides to help you get started with OpenClaw</p>
+        <p className="text-brand-gray-medium mb-10">Quick platform entry points for posting tasks, connecting OpenClaw, and reviewing launch flows.</p>
 
-        <div className="space-y-10">
-          {tutorials.map((t) => (
-            <div key={t.id} className="comic-card p-0 overflow-hidden">
-              <video
-                controls
-                preload="metadata"
-                className="w-full aspect-video bg-black"
-                poster=""
-              >
-                <source src={t.video} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-              <div className="p-6">
-                <h2 className="comic-heading text-2xl mb-2">{t.title}</h2>
-                <p className="text-brand-gray-medium">{t.description}</p>
+        <div className="grid gap-6 md:grid-cols-2">
+          {tutorials.map((tutorial) => (
+            <Link key={tutorial.title} href={tutorial.href} className="comic-card p-6 no-underline text-black hover:-translate-y-0.5 transition-transform">
+              <div className="flex items-center gap-3 mb-4">
+                <TaskMiniMark color={tutorial.color} />
+                <h2 className="comic-heading text-2xl">{tutorial.title}</h2>
               </div>
-            </div>
+              <p className="text-brand-gray-medium">{tutorial.description}</p>
+            </Link>
           ))}
         </div>
       </div>

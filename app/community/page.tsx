@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/components/AuthProvider'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Suspense } from 'react'
+import { TaskMiniMark, TaskSheet } from '@/components/TaskVisual'
 
 type CommunityBot = {
   id: number
@@ -29,27 +29,23 @@ type SortMode = 'newest' | 'top' | 'trending' | 'most_deployed' | 'most_viewed'
 
 const CATEGORIES = [
   { id: '', label: 'All', icon: '&#128300;' },
-  { id: 'productivity', label: 'Productivity', icon: '&#9889;' },
-  { id: 'creative', label: 'Creative', icon: '&#127912;' },
   { id: 'business', label: 'Business', icon: '&#128188;' },
-  { id: 'education', label: 'Education', icon: '&#128218;' },
-  { id: 'entertainment', label: 'Entertainment', icon: '&#127918;' },
-  { id: 'developer', label: 'Developer', icon: '&#128187;' },
-  { id: 'health', label: 'Health', icon: '&#128154;' },
-  { id: 'social', label: 'Social', icon: '&#128172;' },
   { id: 'finance', label: 'Finance', icon: '&#128176;' },
+  { id: 'health', label: 'Health', icon: '&#128154;' },
+  { id: 'operations', label: 'Operations', icon: '&#9881;' },
+  { id: 'developer', label: 'Developer', icon: '&#128187;' },
+  { id: 'education', label: 'Education', icon: '&#128218;' },
 ]
 
 const SORT_OPTIONS: { id: SortMode; label: string }[] = [
   { id: 'newest', label: 'Newest' },
   { id: 'top', label: 'Top Rated' },
   { id: 'trending', label: 'Trending' },
-  { id: 'most_deployed', label: 'Most Hired' },
-  { id: 'most_viewed', label: 'Most Viewed' },
+  { id: 'most_deployed', label: 'Most Launched' },
+  { id: 'most_viewed', label: 'Most Popular' },
 ]
 
 function CommunityContent() {
-  const { user } = useAuth()
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -115,15 +111,13 @@ function CommunityContent() {
           <div>
             <h1 className="comic-heading text-3xl md:text-4xl">COMMUNITY</h1>
             <p className="text-sm text-brand-gray-medium mt-1">
-              Discover and deploy AI companions created by the community
+              Discover public task packs, onboarding briefs, and OpenClaw-ready workflows
             </p>
           </div>
           <div className="flex gap-2">
-            {user && (
-              <Link href="/create" className="comic-btn text-sm py-2 px-5 whitespace-nowrap">
-                + PUBLISH
-              </Link>
-            )}
+            <Link href="/create" className="comic-btn text-sm py-2 px-5 whitespace-nowrap">
+              + POST TASK
+            </Link>
           </div>
         </div>
 
@@ -135,7 +129,7 @@ function CommunityContent() {
                 type="text"
                 value={searchInput}
                 onChange={e => setSearchInput(e.target.value)}
-                placeholder="Search companions by name, role, or description..."
+                placeholder="Search tasks by title, role, or description..."
                 className="w-full px-4 py-3 pl-11 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition"
               />
               <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -199,7 +193,7 @@ function CommunityContent() {
             ))}
           </div>
           <span className="text-xs text-brand-gray-medium font-display">
-            {total} companion{total !== 1 ? 's' : ''} total
+            {total} task pack{total !== 1 ? 's' : ''} total
           </span>
         </div>
 
@@ -240,28 +234,24 @@ function CommunityContent() {
             )}
           </>
         ) : (
-          <div className="comic-card p-12 text-center">
-            <div className="text-5xl mb-4">&#129302;</div>
-            <h3 className="comic-heading text-xl mb-3">
-              {search ? 'NO RESULTS FOUND' : 'NO COMPANIONS YET'}
-            </h3>
-            <p className="text-brand-gray-medium mb-6 max-w-md mx-auto">
-              {search
-                ? `No companions match "${search}". Try a different search or browse all companions.`
-                : 'Be the first to create and publish an AI companion for the community!'
+            <div className="comic-card p-12 text-center">
+              <div className="text-5xl mb-4">&#129302;</div>
+              <h3 className="comic-heading text-xl mb-3">
+                {search ? 'NO RESULTS FOUND' : 'NO TASK PACKS YET'}
+              </h3>
+              <p className="text-brand-gray-medium mb-6 max-w-md mx-auto">
+                {search
+                  ? `No task packs match "${search}". Try a different search or browse all tasks.`
+                  : 'Be the first to publish a public AI-agent task pack for the community.'
               }
             </p>
             {search ? (
               <button onClick={() => { setSearch(''); setSearchInput(''); setCategory('') }} className="comic-btn inline-block">
                 CLEAR FILTERS
               </button>
-            ) : user ? (
-              <Link href="/create" className="comic-btn inline-block">
-                CREATE YOUR COMPANION
-              </Link>
             ) : (
-              <Link href="/login" className="comic-btn inline-block">
-                SIGN IN TO CREATE
+              <Link href="/create" className="comic-btn inline-block">
+                POST YOUR TASK
               </Link>
             )}
           </div>
@@ -278,28 +268,14 @@ function CommunityCard({ bot }: { bot: CommunityBot }) {
 
   return (
     <div className="comic-card-hover flex flex-col">
-      <div className="h-2" style={{ backgroundColor: botColor }} />
       <Link
         href={`/companions/community/${bot.id}`}
-        className="p-6 pb-2 flex flex-col items-center text-center hover:bg-gray-50/50 transition"
+        className="p-6 pb-2 hover:bg-gray-50/50 transition"
       >
-        {bot.icon_url ? (
-          <img
-            src={bot.icon_url}
-            alt={displayName}
-            className="w-20 h-20 rounded-full avatar-comic bg-brand-gray mb-3 object-cover"
-          />
-        ) : (
-          <div
-            className="w-20 h-20 rounded-full avatar-comic flex items-center justify-center mb-3"
-            style={{ backgroundColor: `${botColor}30`, borderColor: botColor }}
-          >
-            <span className="font-display font-black text-2xl text-black">
-              {displayName.charAt(0).toUpperCase()}
-            </span>
-          </div>
-        )}
-        <h3 className="comic-heading text-xl">{displayName.toUpperCase()}</h3>
+        <div className="flex items-center gap-3 mb-3">
+          <TaskMiniMark color={botColor} size="lg" />
+          <h3 className="comic-heading text-xl">{displayName.toUpperCase()}</h3>
+        </div>
         {bot.role && (
           <span
             className="inline-block mt-1 px-3 py-0.5 text-xs font-display font-bold uppercase border-2 border-black text-white"
@@ -316,12 +292,19 @@ function CommunityCard({ bot }: { bot: CommunityBot }) {
         <span className="text-[10px] text-brand-gray-medium font-display mt-2">
           by {bot.author_name}
         </span>
-        <div className="w-full mt-4">
-          <div className="border-t-2 border-dashed border-brand-gray-medium" />
-          <p className="font-body text-sm text-brand-gray-dark text-center mt-3 line-clamp-2">
-            {bot.description || 'A community-created AI companion'}
-          </p>
-        </div>
+        <TaskSheet
+          color={botColor}
+          category={bot.category || 'community'}
+          role={bot.role || 'COMMUNITY TASK'}
+          summary={bot.description || 'A community-posted task pack for OpenClaw agents'}
+          bullets={[
+            bot.description || 'Community onboarding brief included',
+            `Posted by ${bot.author_name}`,
+            (bot.tags && bot.tags.length > 0) ? `Tags: ${bot.tags.slice(0, 3).join(', ')}` : 'OpenClaw-ready workflow',
+          ]}
+          compact
+          className="mt-4"
+        />
       </Link>
       <div className="p-6 pt-4 mt-auto">
         {/* Stats row */}
@@ -356,7 +339,7 @@ function CommunityCard({ bot }: { bot: CommunityBot }) {
           href={`/companions/community/${bot.id}`}
           className="comic-btn-outline block text-center w-full text-sm"
         >
-          VIEW DETAILS
+          VIEW TASK
         </Link>
       </div>
     </div>

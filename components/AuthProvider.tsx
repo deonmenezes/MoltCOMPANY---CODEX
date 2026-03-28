@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabaseBrowser } from '@/lib/supabase-browser'
+import { isSupabaseBrowserConfigured } from '@/lib/supabase-browser'
 import type { User, Session } from '@supabase/supabase-js'
 
 type AuthContextType = {
@@ -34,6 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!isSupabaseBrowserConfigured) {
+      setLoading(false)
+      return
+    }
+
     supabaseBrowser.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
@@ -52,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signInWithGoogle = async () => {
+    if (!isSupabaseBrowserConfigured) return
     await supabaseBrowser.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -61,11 +68,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithPhone = async (phone: string) => {
+    if (!isSupabaseBrowserConfigured) {
+      return { error: 'Phone sign-in is not configured in local demo mode' }
+    }
     const { error } = await supabaseBrowser.auth.signInWithOtp({ phone })
     return { error: error?.message ?? null }
   }
 
   const verifyPhoneOtp = async (phone: string, otp: string) => {
+    if (!isSupabaseBrowserConfigured) {
+      return { error: 'Phone verification is not configured in local demo mode' }
+    }
     const { error } = await supabaseBrowser.auth.verifyOtp({
       phone,
       token: otp,
@@ -75,6 +88,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const linkPhone = async (phone: string) => {
+    if (!isSupabaseBrowserConfigured) {
+      return { error: 'Phone linking is not configured in local demo mode' }
+    }
     try {
       const token = session?.access_token
       if (!token) return { error: 'Not signed in' }
@@ -96,6 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const verifyPhoneLink = async (phone: string, code: string) => {
+    if (!isSupabaseBrowserConfigured) {
+      return { error: 'Phone verification is not configured in local demo mode' }
+    }
     try {
       const token = session?.access_token
       if (!token) return { error: 'Not signed in' }
@@ -120,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
+    if (!isSupabaseBrowserConfigured) return
     await supabaseBrowser.auth.signOut()
   }
 

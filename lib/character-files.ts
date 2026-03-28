@@ -3,11 +3,11 @@ export type CharacterFileName = typeof CHARACTER_FILE_NAMES[number]
 export type CharacterFiles = Record<CharacterFileName, string>
 
 export const CHARACTER_FILE_DESCRIPTIONS: Record<CharacterFileName, string> = {
-  SOUL: 'Core personality, values, and behavioral principles',
+  SOUL: 'Core task mission, values, and behavioral principles',
   AGENTS: 'Sub-agent definitions and delegation rules',
-  IDENTITY: 'Name, role, tone of voice, and public-facing persona',
+  IDENTITY: 'Task name, outcome, tone, and public-facing summary',
   HEARTBEAT: 'Recurring scheduled tasks and periodic checks',
-  USER: 'How to interact with and respond to users',
+  USER: 'How to interact with operators, customers, and reviewers',
   TOOLS: 'Available tools, integrations, and capabilities',
   BOOTSTRAP: 'Startup instructions and initialization sequence',
 }

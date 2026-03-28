@@ -1,701 +1,767 @@
 'use client'
 
-import { useAuth } from '@/components/AuthProvider'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/components/AuthProvider'
 import { CharacterEditor } from '@/components/CharacterEditor'
+import { TaskMiniMark, TaskSheet } from '@/components/TaskVisual'
 import { CHARACTER_FILE_NAMES, type CharacterFiles } from '@/lib/character-files'
+import { formatCompensation } from '@/lib/task-onboarding'
 
-const COLOR_PALETTE = [
-  '#FFD600', '#F59E0B', '#EF4444', '#EC4899',
-  '#8B5CF6', '#3B82F6', '#06B6D4', '#10B981',
-  '#6B7280', '#000000',
-]
+const COLORS = ['#FFD600', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#3B82F6', '#06B6D4', '#10B981', '#6B7280', '#000000']
+const CATEGORIES = ['business', 'finance', 'health', 'operations', 'developer', 'education', 'other']
+const CLAIM_CHANNELS = ['chat', 'telegram', 'slack', 'email']
 
-function blankCharacterFiles(): CharacterFiles {
+type StageId = 'offer' | 'operations' | 'packet' | 'publish'
+
+function blankFiles(): CharacterFiles {
   const files = {} as CharacterFiles
-  for (const name of CHARACTER_FILE_NAMES) {
-    files[name] = ''
-  }
-  files.SOUL = `You are [NAME], a [ROLE].
+  for (const name of CHARACTER_FILE_NAMES) files[name] = ''
+  files.SOUL = `You are [TASK TITLE], an OpenAI task runner for [OUTCOME].
 
-Core values:
--
-
-Communication style:
-- `
-  files.IDENTITY = `Name: [NAME]
-Role: [ROLE]
-Tone: Professional yet approachable
-
-Public persona:
-- `
-  files.USER = `How to interact with users:
-- Listen carefully to their needs
-- Provide clear, actionable responses
-- Ask clarifying questions when needed`
+Mission:
+- Read the onboarding packet before acting
+- Complete the task against the definition of done
+- Escalate missing access immediately`
+  files.IDENTITY = `Task: [TASK TITLE]
+Outcome: [OUTCOME]
+Tone: decisive, calm, and operational`
+  files.USER = `Interaction rules:
+- Confirm the goal in one sentence
+- Keep progress updates short
+- Hand off with blockers, outcome, and next action`
+  files.BOOTSTRAP = `Start sequence:
+- Load the payout and handoff rules
+- Check tools and approved channels
+- Begin only when scope is clear`
   return files
 }
 
-type StepId = 'basics' | 'personality' | 'tools' | 'publish'
+export default function CreateTaskPage() {
+  return <CreateTaskFlow />
+}
 
-export default function CreateCompanionPage() {
-  const { user, session, loading } = useAuth()
-  const router = useRouter()
+function CreateTaskFlow() {
+  const { session } = useAuth()
 
+  const [stageIndex, setStageIndex] = useState(0)
   const [name, setName] = useState('')
   const [role, setRole] = useState('')
   const [description, setDescription] = useState('')
-  const [iconUrl, setIconUrl] = useState('')
-  const [color, setColor] = useState(COLOR_PALETTE[0])
-  const [characterFiles, setCharacterFiles] = useState<CharacterFiles>(blankCharacterFiles)
-  const [category, setCategory] = useState('other')
-  const [tagsInput, setTagsInput] = useState('')
+  const [doneWhen, setDoneWhen] = useState('')
+  const [handoff, setHandoff] = useState('')
+  const [operatorName, setOperatorName] = useState('')
+  const [operatorEmail, setOperatorEmail] = useState('')
+  const [claimChannel, setClaimChannel] = useState('chat')
+  const [color, setColor] = useState(COLORS[0])
+  const [category, setCategory] = useState('operations')
   const [tags, setTags] = useState<string[]>([])
-  const [toolsConfig, setToolsConfig] = useState({
-    browser: true,
-    reactions: true,
-    stickers: false,
-  })
+  const [tagsInput, setTagsInput] = useState('')
+  const [monthlyPrice, setMonthlyPrice] = useState('40')
+  const [commissionRate, setCommissionRate] = useState('20')
+  const [compensationModel, setCompensationModel] = useState<'completion' | 'holdback' | 'custom'>('completion')
+  const [files, setFiles] = useState<CharacterFiles>(blankFiles)
+  const [tools, setTools] = useState({ browser: true, crm: false, audit: true })
   const [customInstructions, setCustomInstructions] = useState('')
-
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [publishAsSkill, setPublishAsSkill] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [published, setPublished] = useState(false)
+  const [publishedId, setPublishedId] = useState<number | null>(null)
 
-  const allSteps: StepId[] = ['basics', 'personality', 'tools', 'publish']
-  const currentStep = allSteps[currentStepIndex]
-
-  const stepLabels: Record<StepId, string> = {
-    basics: 'Basics',
-    personality: 'Personality',
-    tools: 'Tools',
-    publish: 'Publish',
+  const stages: StageId[] = ['offer', 'operations', 'packet', 'publish']
+  const labels: Record<StageId, string> = {
+    offer: 'Human brief',
+    operations: 'Payout + claim',
+    packet: 'Agent packet',
+    publish: 'Review',
   }
+  const stage = stages[stageIndex]
+  const monthlyValue = Math.max(0, Number(monthlyPrice) || 40)
+  const commissionValue = Math.max(0, Number(commissionRate) || 20)
+  const totalChars = Object.values(files).reduce((sum, value) => sum + value.length, 0)
+  const previewBullets = [
+    doneWhen.trim() ? `Done when: ${doneWhen.trim()}` : 'Done when the requested outcome is confirmed.',
+    handoff.trim() ? `Handoff: ${handoff.trim()}` : 'Handoff: return a clean summary to the operator.',
+    `Compensation: ${formatCompensation(monthlyValue, commissionValue, compensationModel)}`,
+  ]
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
-        <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full" />
-      </div>
-    )
-  }
+  const canProceed =
+    stage === 'offer'
+      ? Boolean(name.trim() && role.trim() && description.trim())
+      : stage === 'operations'
+        ? Boolean(operatorName.trim() && handoff.trim())
+        : true
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
-        <div className="text-center">
-          <h2 className="comic-heading text-3xl mb-4">SIGN IN TO CREATE</h2>
-          <p className="text-brand-gray-medium mb-6">You need an account to create AI companions</p>
-          <Link href="/login" className="comic-btn inline-block no-underline">SIGN IN</Link>
-        </div>
-      </div>
-    )
-  }
-
-  if (published) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16 px-4">
-        <div className="comic-card p-12 text-center max-w-lg">
-          <div className="text-6xl mb-4">&#127881;</div>
-          <h2 className="comic-heading text-3xl mb-3">COMPANION PUBLISHED!</h2>
-          <p className="text-brand-gray-medium mb-2">
-            <span className="font-display font-bold text-black">{name.toUpperCase()}</span> is now live in the community.
-          </p>
-          <p className="text-brand-gray-medium mb-8 text-sm">
-            Other users can discover and view your companion.
-          </p>
-          <div className="flex gap-3 justify-center">
-            <Link href="/community" className="comic-btn inline-block text-sm">
-              VIEW IN COMMUNITY
-            </Link>
-            <button onClick={() => { setPublished(false); setCurrentStepIndex(0); setName(''); setRole(''); setDescription(''); setIconUrl(''); setColor(COLOR_PALETTE[0]); setCharacterFiles(blankCharacterFiles()); setCustomInstructions(''); setError(''); }} className="comic-btn-outline text-sm">
-              CREATE ANOTHER
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 'basics': return !!name.trim() && !!role.trim()
-      case 'personality': return true
-      case 'tools': return true
-      case 'publish': return true
-      default: return false
-    }
-  }
-
-  const handleNext = () => {
-    if (currentStepIndex < allSteps.length - 1) {
-      setCurrentStepIndex(currentStepIndex + 1)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
-
-  const handleBack = () => {
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex(currentStepIndex - 1)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
-
-  const goToStep = (index: number) => {
-    if (index <= currentStepIndex) {
-      setCurrentStepIndex(index)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
-
-  const handlePublish = async () => {
+  const resetForm = () => {
+    setStageIndex(0)
+    setName('')
+    setRole('')
+    setDescription('')
+    setDoneWhen('')
+    setHandoff('')
+    setOperatorName('')
+    setOperatorEmail('')
+    setClaimChannel('chat')
+    setColor(COLORS[0])
+    setCategory('operations')
+    setTags([])
+    setTagsInput('')
+    setMonthlyPrice('40')
+    setCommissionRate('20')
+    setCompensationModel('completion')
+    setFiles(blankFiles())
+    setTools({ browser: true, crm: false, audit: true })
+    setCustomInstructions('')
+    setPublishAsSkill(true)
+    setSubmitting(false)
     setError('')
-    if (!name.trim()) { setError('Companion name is required'); return }
+    setPublishedId(null)
+  }
 
-    // Build the full character file content from all files
-    const allContent = CHARACTER_FILE_NAMES
-      .filter(fn => characterFiles[fn].trim())
-      .map(fn => `# ${fn}\n${characterFiles[fn]}`)
-      .join('\n\n---\n\n')
+  const publish = async () => {
+    setError('')
 
-    const fullCharacterFile = customInstructions.trim()
-      ? `${allContent}\n\n---\n\n# CUSTOM INSTRUCTIONS\n${customInstructions}`
-      : allContent
+    if (!name.trim() || !role.trim() || !description.trim()) {
+      setError('Task title, role, and summary are required.')
+      return
+    }
+
+    const packet = [
+      '# TASK OFFER',
+      `Title: ${name.trim()}`,
+      `Role: ${role.trim()}`,
+      `Category: ${category}`,
+      `Claim channel: ${claimChannel}`,
+      `Compensation: ${formatCompensation(monthlyValue, commissionValue, compensationModel)}`,
+      `Definition of done: ${doneWhen.trim() || 'Operator confirms the requested outcome.'}`,
+      `Final handoff: ${handoff.trim() || 'Send a completion summary back to the operator.'}`,
+      `Operator: ${operatorName.trim() || 'Guest operator'}`,
+      operatorEmail.trim() ? `Operator email: ${operatorEmail.trim()}` : '',
+      tags.length ? `Tags: ${tags.join(', ')}` : '',
+      '',
+      '# AGENT PACKET',
+      CHARACTER_FILE_NAMES.filter(key => files[key].trim()).map(key => `## ${key}\n${files[key]}`).join('\n\n'),
+      '',
+      '# TOOLS',
+      tools.browser ? '- Web research approved' : '- Web research not approved',
+      tools.crm ? '- CRM access expected' : '- CRM access not expected',
+      tools.audit ? '- Audit trail required in final handoff' : '- Audit trail optional',
+      publishAsSkill ? '- Publish this workflow as a Claw Hub skill lane' : '- Do not publish as a skill lane',
+      customInstructions.trim() ? `\n# CUSTOM RULES\n${customInstructions.trim()}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n')
 
     setSubmitting(true)
     try {
-      const res = await fetch('/api/community', {
+      const response = await fetch('/api/community', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`,
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim(),
-          icon_url: iconUrl.trim() || null,
-          character_file: fullCharacterFile || 'No character file provided.',
+          character_file: packet,
           role: role.trim(),
           color,
-          tools_config: toolsConfig,
           category,
-          tags,
+          tags: [...tags, publishAsSkill ? 'claw-hub-skill' : null].filter(Boolean),
+          guest_name: operatorName.trim(),
+          guest_email: operatorEmail.trim(),
         }),
       })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Failed to publish')
+
+      const data = await response.json()
+      if (!response.ok) {
+        if (response.status === 503) {
+          localStorage.setItem('moltcompany:draft-task', JSON.stringify({
+            id: 'local',
+            source: 'draft',
+            characterName: name.trim().toUpperCase(),
+            characterRole: role.trim().toUpperCase(),
+            category,
+            description: description.trim(),
+            color,
+            onboardingItems: previewBullets,
+            completionSteps: [
+              'Read the local draft packet before starting',
+              `Work through ${claimChannel} and keep ${operatorName.trim() || 'the operator'} updated`,
+              handoff.trim() || 'Return a completion summary with blockers and next action',
+            ],
+            packetPreview: packet,
+            monthlyPrice: monthlyValue,
+            commissionRate: commissionValue,
+            compensationModel,
+          }))
+          setPublishedId(-1)
+          return
+        }
+        setError(data.error || 'Failed to publish task')
         return
       }
-      setPublished(true)
+
+      setPublishedId(data.bot?.id ?? null)
     } catch {
-      setError('Failed to publish companion')
+      setError('Failed to publish task')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const totalCharSize = Object.values(characterFiles).reduce((sum, c) => sum + c.length, 0)
+  if (publishedId) {
+    return (
+      <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+        <div className="max-w-3xl mx-auto comic-card p-10 text-center">
+          <TaskMiniMark color={color} size="lg" className="mx-auto mb-5" />
+          <div className="inline-block bg-brand-yellow border-3 border-black px-4 py-1 text-xs font-display font-black uppercase mb-4">
+            Human intake complete
+          </div>
+          <h1 className="comic-heading text-4xl mb-4">TASK PUBLISHED</h1>
+          <p className="text-brand-gray-medium max-w-xl mx-auto mb-8">
+            The task is now live with a cleaner human brief, payout rules, and a packet that can be turned into an OpenAI-agent onboarding link.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Link href={publishedId === -1 ? '/deploy?draft=local' : `/deploy?community=${publishedId}`} className="comic-btn text-sm py-3 no-underline">
+              GENERATE CLAIM LINK
+            </Link>
+            {publishedId === -1 ? (
+              <Link href="/onboarding?draft=local" className="comic-btn-outline text-sm py-3 no-underline">
+                VIEW LOCAL PACKET
+              </Link>
+            ) : (
+              <Link href={`/companions/community/${publishedId}`} className="comic-btn-outline text-sm py-3 no-underline">
+                VIEW TASK PAGE
+              </Link>
+            )}
+          </div>
+          <button onClick={resetForm} className="text-sm font-display font-bold uppercase text-brand-gray-medium hover:text-black transition mt-5">
+            POST ANOTHER TASK
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-white pt-24 pb-16 px-4">
-      <div className="max-w-3xl mx-auto">
-
-        {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
-          {iconUrl ? (
-            <img src={iconUrl} alt="" className="w-14 h-14 rounded-full avatar-comic object-cover bg-brand-gray" />
-          ) : (
-            <div
-              className="w-14 h-14 rounded-full avatar-comic flex items-center justify-center"
-              style={{ backgroundColor: `${color}30`, border: '3px solid black' }}
-            >
-              <span className="font-display font-black text-2xl text-black">
-                {name ? name.charAt(0).toUpperCase() : '?'}
-              </span>
-            </div>
-          )}
-          <div>
-            <h1 className="comic-heading text-2xl md:text-3xl">
-              {name ? `CREATE ${name.toUpperCase()}` : 'CREATE YOUR COMPANION'}
-            </h1>
-            {role && <p className="text-xs font-display font-bold text-brand-gray-medium uppercase">{role}</p>}
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="mb-10">
-          <div className="flex items-center gap-1">
-            {allSteps.map((step, i) => (
-              <div key={step} className="flex items-center flex-1">
-                <button
-                  onClick={() => goToStep(i)}
-                  className={`flex items-center gap-2 ${i <= currentStepIndex ? 'cursor-pointer' : 'cursor-default'}`}
-                >
-                  <div className={`w-8 h-8 border-3 border-black flex items-center justify-center font-display font-black text-xs transition-all ${
-                    i < currentStepIndex ? 'bg-black text-white' :
-                    i === currentStepIndex ? 'bg-brand-yellow text-black' :
-                    'bg-white text-brand-gray-medium'
-                  }`}>
-                    {i < currentStepIndex ? '\u2713' : i + 1}
-                  </div>
-                  <span className={`hidden sm:inline text-xs font-display font-bold uppercase ${
-                    i === currentStepIndex ? 'text-black' : 'text-brand-gray-medium'
-                  }`}>
-                    {stepLabels[step]}
-                  </span>
-                </button>
-                {i < allSteps.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-2 ${i < currentStepIndex ? 'bg-black' : 'bg-gray-200'}`} />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Step content */}
-        <div className="min-h-[400px]">
-
-          {/* STEP 1: BASICS */}
-          {currentStep === 'basics' && (
+    <div className="min-h-screen bg-white pt-20 pb-16 px-4">
+      <div className="max-w-6xl mx-auto">
+        <section className="mb-8 border-3 border-black bg-brand-yellow/10 p-6 md:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] items-start">
             <div>
-              <h2 className="comic-heading text-xl mb-2">NAME & IDENTITY</h2>
-              <p className="text-sm text-brand-gray-medium mb-6 font-body">Give your companion a name, role, and look.</p>
-
-              {/* Icon preview + URL */}
-              <div className="flex items-center gap-4 mb-6">
-                {iconUrl ? (
-                  <img src={iconUrl} alt="Preview" className="w-20 h-20 rounded-full avatar-comic object-cover bg-brand-gray" />
-                ) : (
-                  <div
-                    className="w-20 h-20 rounded-full avatar-comic flex items-center justify-center"
-                    style={{ backgroundColor: `${color}30`, borderColor: color }}
-                  >
-                    <span className="font-display font-black text-3xl text-black">
-                      {name ? name.charAt(0).toUpperCase() : '?'}
-                    </span>
-                  </div>
-                )}
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={iconUrl}
-                    onChange={e => setIconUrl(e.target.value)}
-                    placeholder="Paste image URL (optional)"
-                    className="w-full px-4 py-3 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition"
-                  />
-                  <p className="text-xs text-brand-gray-medium mt-1">Or leave empty for a letter icon</p>
+              <span className="inline-block bg-white border-3 border-black px-3 py-1 text-xs font-display font-black uppercase mb-4">
+                Human task intake
+              </span>
+              <h1 className="comic-heading text-4xl md:text-6xl mb-4">
+                POST A TASK
+                <br />
+                FOR A REAL AGENT
+              </h1>
+              <p className="text-lg text-brand-gray-dark max-w-2xl">
+                Build the human-facing task brief first, attach the payout logic, then ship an onboarding packet that the OpenAI agent can claim cleanly.
+              </p>
+            </div>
+            <div className="comic-card p-5 bg-white">
+              <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium mb-2">What changes in this flow</div>
+              <div className="grid gap-3 sm:grid-cols-2 text-sm text-brand-gray-dark">
+                <div className="border-2 border-black p-3">
+                  <div className="font-display font-black uppercase mb-1">Human first</div>
+                  <p>No sign-in gate before writing the task, payout, and handoff.</p>
+                </div>
+                <div className="border-2 border-black p-3">
+                  <div className="font-display font-black uppercase mb-1">Claim ready</div>
+                  <p>The post becomes a claimable onboarding packet, not just a listing.</p>
+                </div>
+                <div className="border-2 border-black p-3">
+                  <div className="font-display font-black uppercase mb-1">Pricing clear</div>
+                  <p>$40/mo base and completion-linked commission are visible from the start.</p>
+                </div>
+                <div className="border-2 border-black p-3">
+                  <div className="font-display font-black uppercase mb-1">Skill lane</div>
+                  <p>Mark the workflow for the Claw Hub skill surface while you publish.</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
 
-              {/* Color picker */}
-              <div className="mb-6">
-                <label className="block font-display font-bold text-sm uppercase mb-2">Accent Color</label>
-                <div className="flex flex-wrap gap-2">
-                  {COLOR_PALETTE.map(c => (
-                    <button
-                      key={c}
-                      onClick={() => setColor(c)}
-                      className={`w-10 h-10 rounded-full border-3 transition-all ${
-                        color === c ? 'border-black scale-110 shadow-comic-sm' : 'border-gray-300 hover:border-black'
-                      }`}
-                      style={{ backgroundColor: c }}
-                      title={c}
-                    />
-                  ))}
-                </div>
-              </div>
+        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+          <div>
+            <div className="flex flex-wrap gap-2 mb-8">
+              {stages.map((item, index) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => index <= stageIndex && setStageIndex(index)}
+                  className={`px-4 py-2 border-3 border-black font-display font-bold text-xs uppercase transition ${
+                    index === stageIndex
+                      ? 'bg-brand-yellow shadow-comic-sm'
+                      : index < stageIndex
+                        ? 'bg-black text-white'
+                        : 'bg-white text-brand-gray-medium'
+                  }`}
+                >
+                  {index + 1}. {labels[item]}
+                </button>
+              ))}
+            </div>
 
-              {/* Name */}
-              <div className="mb-6">
-                <label className="block font-display font-bold text-sm uppercase mb-2">Companion Name *</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="e.g. LUNA, ATLAS, MAX..."
-                  maxLength={60}
-                  className="w-full px-4 py-3 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition font-display font-bold uppercase"
+            {stage === 'offer' && (
+              <section className="space-y-6">
+                <SectionHeader
+                  title="Human Brief"
+                  text="Set the task identity and target outcome before the agent packet is written."
                 />
-                <p className="text-xs text-brand-gray-medium mt-1">{name.length}/60 characters</p>
-              </div>
 
-              {/* Role */}
-              <div className="mb-6">
-                <label className="block font-display font-bold text-sm uppercase mb-2">Role / Title *</label>
-                <input
-                  type="text"
-                  value={role}
-                  onChange={e => setRole(e.target.value)}
-                  placeholder="e.g. Marketing Guru, Research Assistant, Code Reviewer..."
-                  maxLength={60}
-                  className="w-full px-4 py-3 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="mb-6">
-                <label className="block font-display font-bold text-sm uppercase mb-2">Short Description</label>
-                <textarea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  placeholder="What does this companion do? What makes it special?"
-                  maxLength={300}
-                  rows={3}
-                  className="w-full px-4 py-3 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition resize-none"
-                />
-                <p className="text-xs text-brand-gray-medium mt-1">{description.length}/300 characters</p>
-              </div>
-
-              {/* Category */}
-              <div className="mb-6">
-                <label className="block font-display font-bold text-sm uppercase mb-2">Category</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { id: 'productivity', label: 'Productivity' },
-                    { id: 'creative', label: 'Creative' },
-                    { id: 'business', label: 'Business' },
-                    { id: 'education', label: 'Education' },
-                    { id: 'entertainment', label: 'Entertainment' },
-                    { id: 'developer', label: 'Developer' },
-                    { id: 'health', label: 'Health' },
-                    { id: 'social', label: 'Social' },
-                    { id: 'finance', label: 'Finance' },
-                    { id: 'other', label: 'Other' },
-                  ].map(cat => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setCategory(cat.id)}
-                      className={`px-3 py-1.5 border-2 border-black font-display font-bold text-xs uppercase transition-all ${
-                        category === cat.id ? 'bg-brand-yellow shadow-comic-sm' : 'bg-white hover:bg-gray-50'
-                      }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="mb-6">
-                <label className="block font-display font-bold text-sm uppercase mb-2">Tags (up to 5)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={tagsInput}
-                    onChange={e => setTagsInput(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' || e.key === ',') {
-                        e.preventDefault()
-                        const tag = tagsInput.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
-                        if (tag && tags.length < 5 && !tags.includes(tag)) {
-                          setTags([...tags, tag])
-                        }
-                        setTagsInput('')
-                      }
-                    }}
-                    placeholder="Type a tag and press Enter..."
-                    className="flex-1 px-4 py-2 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition text-sm"
-                    disabled={tags.length >= 5}
-                  />
-                </div>
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {tags.map(tag => (
-                      <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-display font-bold bg-gray-100 border border-gray-300 text-gray-700 uppercase">
-                        #{tag}
-                        <button type="button" onClick={() => setTags(tags.filter(t => t !== tag))} className="text-red-400 hover:text-red-600 ml-0.5">&times;</button>
-                      </span>
+                <div className="comic-card p-6">
+                  <label className="block font-display font-bold text-sm uppercase mb-2">Accent Color</label>
+                  <div className="flex flex-wrap gap-2">
+                    {COLORS.map(swatch => (
+                      <button
+                        key={swatch}
+                        type="button"
+                        onClick={() => setColor(swatch)}
+                        className={`w-10 h-10 border-3 ${color === swatch ? 'border-black scale-110 shadow-comic-sm' : 'border-gray-300 hover:border-black'}`}
+                        style={{ backgroundColor: swatch }}
+                        title={swatch}
+                      />
                     ))}
                   </div>
-                )}
-                <p className="text-xs text-brand-gray-medium mt-1">{tags.length}/5 tags &mdash; helps users discover your companion</p>
-              </div>
-
-              {/* Live preview card */}
-              <div className="mt-8">
-                <label className="block font-display font-bold text-sm uppercase mb-3 text-brand-gray-medium">Preview</label>
-                <div className="comic-card overflow-hidden max-w-xs">
-                  <div className="h-2" style={{ backgroundColor: color }} />
-                  <div className="p-6 text-center">
-                    {iconUrl ? (
-                      <img src={iconUrl} alt="" className="w-16 h-16 rounded-full avatar-comic mx-auto mb-3 object-cover bg-brand-gray" />
-                    ) : (
-                      <div
-                        className="w-16 h-16 rounded-full avatar-comic mx-auto mb-3 flex items-center justify-center"
-                        style={{ backgroundColor: `${color}30`, borderColor: color }}
-                      >
-                        <span className="font-display font-black text-xl text-black">
-                          {name ? name.charAt(0).toUpperCase() : '?'}
-                        </span>
-                      </div>
-                    )}
-                    <h3 className="comic-heading text-lg">{name ? name.toUpperCase() : 'YOUR BOT'}</h3>
-                    {role && (
-                      <span
-                        className="inline-block mt-1 px-3 py-0.5 text-xs font-display font-bold uppercase border-2 border-black text-white"
-                        style={{ backgroundColor: color, color: color === '#FFD600' || color === '#F59E0B' ? '#000' : '#fff' }}
-                      >
-                        {role}
-                      </span>
-                    )}
-                    {description && (
-                      <p className="text-xs text-brand-gray-dark mt-3 line-clamp-2">{description}</p>
-                    )}
-                  </div>
                 </div>
-              </div>
-            </div>
-          )}
 
-          {/* STEP 2: PERSONALITY */}
-          {currentStep === 'personality' && (
-            <div>
-              <h2 className="comic-heading text-xl mb-2">PERSONALITY & CHARACTER</h2>
-              <p className="text-sm text-brand-gray-medium mb-4 font-body">
-                Define {name ? name.toUpperCase() : 'your companion'}&apos;s personality using character files.
-                Each tab represents a different aspect of behavior. You can skip this and come back later.
-              </p>
-
-              {/* Upload option */}
-              <div className="mb-4">
-                <label className="comic-btn-outline text-xs inline-block cursor-pointer">
-                  UPLOAD .MD FILE
+                <Field label="Task Title *">
                   <input
-                    type="file"
-                    accept=".md,.txt"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (!file) return
-                      if (file.size > 50000) { setError('File too large. Max 50KB.'); return }
-                      const reader = new FileReader()
-                      reader.onload = (ev) => {
-                        const content = ev.target?.result as string || ''
-                        setCharacterFiles(prev => ({ ...prev, SOUL: content }))
-                        setError('')
-                      }
-                      reader.readAsText(file)
-                    }}
+                    value={name}
+                    onChange={event => setName(event.target.value)}
+                    placeholder="e.g. Policy Pro, Refill Desk, Claim Policy Pro..."
+                    maxLength={60}
+                    className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow font-display font-bold uppercase"
                   />
-                </label>
-                <span className="text-xs text-brand-gray-medium ml-3">Upload to SOUL tab</span>
-              </div>
+                </Field>
 
-              <CharacterEditor files={characterFiles} onChange={setCharacterFiles} />
-            </div>
-          )}
-
-          {/* STEP 3: TOOLS & CONFIG */}
-          {currentStep === 'tools' && (
-            <div>
-              <h2 className="comic-heading text-xl mb-2">TOOLS & CAPABILITIES</h2>
-              <p className="text-sm text-brand-gray-medium mb-6 font-body">
-                Configure what tools your companion can use when deployed via Telegram.
-              </p>
-
-              <div className="comic-card p-6 space-y-6">
-                {/* Browser */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-display font-bold text-sm uppercase">Web Browsing</h3>
-                    <p className="text-xs text-brand-gray-medium mt-0.5">Allow the companion to browse the web and fetch information</p>
-                  </div>
-                  <ToggleSwitch
-                    checked={toolsConfig.browser}
-                    onChange={(v) => setToolsConfig(prev => ({ ...prev, browser: v }))}
+                <Field label="Outcome / Role *">
+                  <input
+                    value={role}
+                    onChange={event => setRole(event.target.value)}
+                    placeholder="What role is the agent actually claiming?"
+                    maxLength={80}
+                    className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
                   />
-                </div>
-                <div className="h-px bg-gray-200" />
+                </Field>
 
-                {/* Reactions */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-display font-bold text-sm uppercase">Telegram Reactions</h3>
-                    <p className="text-xs text-brand-gray-medium mt-0.5">React to messages with emojis in Telegram chats</p>
-                  </div>
-                  <ToggleSwitch
-                    checked={toolsConfig.reactions}
-                    onChange={(v) => setToolsConfig(prev => ({ ...prev, reactions: v }))}
+                <Field label="Task Summary *">
+                  <textarea
+                    value={description}
+                    onChange={event => setDescription(event.target.value)}
+                    placeholder="Write the outcome, where the agent operates, and what the first pass should achieve."
+                    rows={5}
+                    maxLength={320}
+                    className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
                   />
-                </div>
-                <div className="h-px bg-gray-200" />
+                </Field>
 
-                {/* Stickers */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-display font-bold text-sm uppercase">Telegram Stickers</h3>
-                    <p className="text-xs text-brand-gray-medium mt-0.5">Send stickers in conversations for more expressive communication</p>
-                  </div>
-                  <ToggleSwitch
-                    checked={toolsConfig.stickers}
-                    onChange={(v) => setToolsConfig(prev => ({ ...prev, stickers: v }))}
-                  />
-                </div>
-              </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Field label="Category">
+                    <div className="flex flex-wrap gap-2">
+                      {CATEGORIES.map(option => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setCategory(option)}
+                          className={`px-3 py-1.5 border-2 border-black font-display font-bold text-xs uppercase ${category === option ? 'bg-brand-yellow shadow-comic-sm' : 'bg-white hover:bg-gray-50'}`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
 
-              {/* Custom instructions */}
-              <div className="mt-6">
-                <label className="block font-display font-bold text-sm uppercase mb-2">Custom Instructions (Optional)</label>
-                <textarea
-                  value={customInstructions}
-                  onChange={e => setCustomInstructions(e.target.value)}
-                  placeholder="Add any extra instructions for how your companion should behave with these tools..."
-                  rows={4}
-                  maxLength={2000}
-                  className="w-full px-4 py-3 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition resize-none font-mono text-sm"
-                />
-                <p className="text-xs text-brand-gray-medium mt-1">{customInstructions.length}/2000 characters</p>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 4: REVIEW & PUBLISH */}
-          {currentStep === 'publish' && (
-            <div>
-              <h2 className="comic-heading text-xl mb-6">REVIEW & PUBLISH</h2>
-
-              {/* Summary card */}
-              <div className="comic-card p-6 mb-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">Companion</span>
-                  <div className="flex items-center gap-2">
-                    {iconUrl ? (
-                      <img src={iconUrl} alt="" className="w-6 h-6 rounded-full border-2 border-black object-cover" />
-                    ) : (
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center border-2 border-black"
-                        style={{ backgroundColor: `${color}30` }}
-                      >
-                        <span className="font-display font-black text-[10px]">{name ? name.charAt(0).toUpperCase() : '?'}</span>
+                  <Field label="Tags">
+                    <input
+                      value={tagsInput}
+                      onChange={event => setTagsInput(event.target.value)}
+                      onKeyDown={event => {
+                        if (event.key === 'Enter' || event.key === ',') {
+                          event.preventDefault()
+                          const tag = tagsInput.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
+                          if (tag && tags.length < 5 && !tags.includes(tag)) setTags([...tags, tag])
+                          setTagsInput('')
+                        }
+                      }}
+                      placeholder="Type a tag and press Enter"
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                    />
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {tags.map(tag => (
+                          <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-display font-bold bg-gray-100 border border-gray-300 uppercase">
+                            #{tag}
+                            <button type="button" onClick={() => setTags(tags.filter(item => item !== tag))}>
+                              ×
+                            </button>
+                          </span>
+                        ))}
                       </div>
                     )}
-                    <span className="font-display font-bold text-sm">{name.toUpperCase() || 'UNNAMED'}</span>
+                  </Field>
+                </div>
+              </section>
+            )}
+
+            {stage === 'operations' && (
+              <section className="space-y-6">
+                <SectionHeader
+                  title="Payout + Claim Setup"
+                  text="Decide what the claimer sees, how the task pays, and where the final handoff should land."
+                />
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Field label="Operator Name *">
+                    <input
+                      value={operatorName}
+                      onChange={event => setOperatorName(event.target.value)}
+                      placeholder="Who owns the task after posting?"
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                    />
+                  </Field>
+                  <Field label="Operator Email">
+                    <input
+                      value={operatorEmail}
+                      onChange={event => setOperatorEmail(event.target.value)}
+                      placeholder="Optional contact for the handoff"
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                    />
+                  </Field>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-3">
+                  <Field label="$ / Month">
+                    <input
+                      type="number"
+                      min="0"
+                      value={monthlyPrice}
+                      onChange={event => setMonthlyPrice(event.target.value)}
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                    />
+                  </Field>
+                  <Field label="Commission %">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={commissionRate}
+                      onChange={event => setCommissionRate(event.target.value)}
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                    />
+                  </Field>
+                  <Field label="Claim Channel">
+                    <div className="flex flex-wrap gap-2">
+                      {CLAIM_CHANNELS.map(option => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setClaimChannel(option)}
+                          className={`px-3 py-2 border-2 border-black font-display font-bold text-xs uppercase ${claimChannel === option ? 'bg-brand-yellow shadow-comic-sm' : 'bg-white hover:bg-gray-50'}`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+                </div>
+
+                <Field label="Commission Rule">
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <ChoiceCard
+                      active={compensationModel === 'completion'}
+                      title="Completion based"
+                      text="20% or your custom commission only matters when the task is finished."
+                      onClick={() => setCompensationModel('completion')}
+                    />
+                    <ChoiceCard
+                      active={compensationModel === 'holdback'}
+                      title="Holdback"
+                      text="Keep a portion pending until the agent completes the required handoff."
+                      onClick={() => setCompensationModel('holdback')}
+                    />
+                    <ChoiceCard
+                      active={compensationModel === 'custom'}
+                      title="Custom"
+                      text="Use your own payout framing if this task needs a special commission structure."
+                      onClick={() => setCompensationModel('custom')}
+                    />
+                  </div>
+                </Field>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Field label="Definition of Done">
+                    <textarea
+                      value={doneWhen}
+                      onChange={event => setDoneWhen(event.target.value)}
+                      rows={4}
+                      placeholder="What exact result means the claimer can call this finished?"
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
+                    />
+                  </Field>
+                  <Field label="Final Handoff *">
+                    <textarea
+                      value={handoff}
+                      onChange={event => setHandoff(event.target.value)}
+                      rows={4}
+                      placeholder="Where should the final result go? Channel, person, format."
+                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
+                    />
+                  </Field>
+                </div>
+              </section>
+            )}
+
+            {stage === 'packet' && (
+              <section className="space-y-6">
+                <SectionHeader
+                  title="Agent Packet"
+                  text="Load the exact brief the OpenAI agent should inherit when the claim link is generated."
+                />
+
+                <div className="comic-card p-6">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <ToggleTile
+                      title="Web research"
+                      text="Allow the agent to browse and verify information."
+                      checked={tools.browser}
+                      onClick={() => setTools(previous => ({ ...previous, browser: !previous.browser }))}
+                    />
+                    <ToggleTile
+                      title="CRM touches"
+                      text="Expect the workflow to push updates into CRM tools."
+                      checked={tools.crm}
+                      onClick={() => setTools(previous => ({ ...previous, crm: !previous.crm }))}
+                    />
+                    <ToggleTile
+                      title="Audit trail"
+                      text="Require a clear action log in the final handoff."
+                      checked={tools.audit}
+                      onClick={() => setTools(previous => ({ ...previous, audit: !previous.audit }))}
+                    />
                   </div>
                 </div>
-                <div className="h-px bg-gray-200" />
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">Role</span>
-                  <span className="font-display font-bold text-sm">{role || 'Not set'}</span>
-                </div>
-                <div className="h-px bg-gray-200" />
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">Description</span>
-                  <span className="font-display text-sm text-right max-w-[200px] truncate">{description || 'None'}</span>
-                </div>
-                <div className="h-px bg-gray-200" />
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">Category</span>
-                  <span className="font-display font-bold text-sm capitalize">{category}</span>
-                </div>
-                {tags.length > 0 && (
-                  <>
-                    <div className="h-px bg-gray-200" />
-                    <div className="flex items-center justify-between">
-                      <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">Tags</span>
-                      <span className="font-display text-sm">{tags.map(t => `#${t}`).join(', ')}</span>
+
+                <div className="comic-card p-6">
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <div>
+                      <h3 className="comic-heading text-xl">Claw Hub Skill Lane</h3>
+                      <p className="text-sm text-brand-gray-medium">
+                        Flag this workflow as an onboarding skill so it appears in the skills marketplace.
+                      </p>
                     </div>
-                  </>
+                    <button
+                      type="button"
+                      onClick={() => setPublishAsSkill(!publishAsSkill)}
+                      className={`relative w-14 h-8 border-3 border-black ${publishAsSkill ? 'bg-brand-yellow' : 'bg-gray-200'}`}
+                    >
+                      <div className={`absolute top-0.5 w-4 h-4 bg-black transition-transform ${publishAsSkill ? 'translate-x-8' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                <CharacterEditor files={files} onChange={setFiles} />
+
+                <Field label="Custom Instructions">
+                  <textarea
+                    value={customInstructions}
+                    onChange={event => setCustomInstructions(event.target.value)}
+                    rows={5}
+                    maxLength={2000}
+                    placeholder="Add any extra completion, escalation, compliance, or payment instructions the link should carry."
+                    className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none font-mono text-sm"
+                  />
+                </Field>
+              </section>
+            )}
+
+            {stage === 'publish' && (
+              <section className="space-y-6">
+                <SectionHeader
+                  title="Review"
+                  text="Check the listing, compensation, and packet summary before publishing."
+                />
+
+                <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+                  <TaskSheet
+                    color={color}
+                    category={category}
+                    role={role || 'Task role'}
+                    summary={description || 'Write a summary so agents know what they are claiming.'}
+                    bullets={previewBullets}
+                    label="Public task card"
+                  />
+
+                  <div className="comic-card p-6 space-y-4">
+                    <ReviewRow label="Operator" value={operatorName || 'Not set'} />
+                    <ReviewRow label="Claim channel" value={claimChannel.toUpperCase()} />
+                    <ReviewRow label="Compensation" value={formatCompensation(monthlyValue, commissionValue, compensationModel)} />
+                    <ReviewRow label="Skill lane" value={publishAsSkill ? 'Publish to Claw Hub' : 'Task only'} />
+                    <ReviewRow label="Packet size" value={totalChars > 0 ? `${(totalChars / 1024).toFixed(1)} KB` : 'Starter packet only'} />
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="p-4 border-3 border-red-500 bg-red-50 text-red-700 font-display font-bold text-sm">
+                    {error}
+                  </div>
                 )}
-                <div className="h-px bg-gray-200" />
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">Character Files</span>
-                  <span className="font-display font-bold text-sm">
-                    {totalCharSize > 0 ? `${(totalCharSize / 1024).toFixed(1)} KB` : 'Empty'}
-                  </span>
-                </div>
-                <div className="h-px bg-gray-200" />
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-sm uppercase text-brand-gray-medium">Tools</span>
-                  <span className="font-display text-sm">
-                    {[
-                      toolsConfig.browser && 'Browser',
-                      toolsConfig.reactions && 'Reactions',
-                      toolsConfig.stickers && 'Stickers',
-                    ].filter(Boolean).join(', ') || 'None'}
-                  </span>
-                </div>
+
+                <button
+                  type="button"
+                  onClick={publish}
+                  disabled={submitting}
+                  className="comic-btn w-full text-lg py-4 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'PUBLISHING...' : 'PUBLISH TASK + PACKET'}
+                </button>
+                <p className="text-xs text-brand-gray-medium text-center">
+                  No sign-in is required in the current demo. Publish first, then generate the OpenAI-agent onboarding link from the claim flow.
+                </p>
+              </section>
+            )}
+
+            <div className="mt-8 flex items-center justify-between">
+              {stageIndex > 0 ? (
+                <button type="button" onClick={() => setStageIndex(stageIndex - 1)} className="comic-btn-outline text-sm py-3 px-6">
+                  ← BACK
+                </button>
+              ) : (
+                <Link href="/deploy" className="comic-btn-outline text-sm py-3 px-6 no-underline">
+                  GO TO CLAIM FLOW
+                </Link>
+              )}
+
+              {stage !== 'publish' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canProceed) return
+                    setStageIndex(stageIndex + 1)
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  disabled={!canProceed}
+                  className="comic-btn text-sm py-3 px-8 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  NEXT →
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-5 lg:sticky lg:top-24 self-start">
+            <TaskSheet
+              color={color}
+              category={category}
+              role={role || 'Task role'}
+              summary={description || 'The public task card preview updates as you write the human brief.'}
+              bullets={previewBullets}
+              label="Live preview"
+            />
+
+            <div className="comic-card p-5">
+              <h2 className="comic-heading text-2xl mb-3">Compensation</h2>
+              <div className="text-lg font-display font-black">
+                {formatCompensation(monthlyValue, commissionValue, compensationModel)}
               </div>
-
-              {/* Verified via Google */}
-              {user?.email && (
-                <div className="flex items-center gap-2 text-green-600 mb-4">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <span className="font-display font-bold text-sm">Verified as {user.email}</span>
-                </div>
-              )}
-
-              {/* Error */}
-              {error && (
-                <div className="mb-6 p-4 border-3 border-red-500 bg-red-50 text-red-700 font-display font-bold text-sm">
-                  {error}
-                </div>
-              )}
-
-              {/* Publish button */}
-              <button
-                onClick={handlePublish}
-                disabled={submitting || !name.trim() || !user?.email}
-                className="comic-btn w-full text-lg py-4 disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
-              >
-                {submitting ? 'PUBLISHING...' : 'PUBLISH TO COMMUNITY'}
-              </button>
-              <p className="text-xs text-brand-gray-medium text-center mt-3">
-                Your companion will be visible to all users in the Community section. Max 3 per user.
+              <p className="text-sm text-brand-gray-medium mt-2">
+                This is what the claim flow will surface before it generates the onboarding link.
               </p>
             </div>
-          )}
-        </div>
 
-        {/* Error (for non-publish steps) */}
-        {error && currentStep !== 'publish' && (
-          <div className="mt-4 p-4 border-3 border-red-500 bg-red-50 text-red-700 font-display font-bold text-sm">
-            {error}
+            <div className="comic-card p-5">
+              <h2 className="comic-heading text-2xl mb-3">What gets generated</h2>
+              <ul className="space-y-2 text-sm text-brand-gray-dark">
+                <li>- Public task card with clear pricing and completion rules</li>
+                <li>- Agent packet loaded into the claim flow</li>
+                <li>- OpenAI-agent onboarding link with operator and handoff attached</li>
+                <li>- Optional Claw Hub skill lane tag for the workflow</li>
+              </ul>
+            </div>
           </div>
-        )}
-
-        {/* Navigation buttons */}
-        <div className="mt-10 flex items-center justify-between">
-          {currentStepIndex > 0 ? (
-            <button onClick={handleBack} className="comic-btn-outline text-sm py-3 px-6">
-              &larr; BACK
-            </button>
-          ) : (
-            <div />
-          )}
-
-          {currentStep !== 'publish' && (
-            <button
-              onClick={handleNext}
-              disabled={!canProceed()}
-              className="comic-btn text-sm py-3 px-8 disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
-            >
-              {currentStep === 'tools' ? 'REVIEW' : 'NEXT'} &rarr;
-            </button>
-          )}
         </div>
       </div>
     </div>
   )
 }
 
-function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+function SectionHeader({ title, text }: { title: string; text: string }) {
+  return (
+    <div>
+      <h2 className="comic-heading text-3xl mb-2">{title}</h2>
+      <p className="text-brand-gray-medium">{text}</p>
+    </div>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="comic-card p-6">
+      <label className="block font-display font-bold text-sm uppercase mb-3">{label}</label>
+      {children}
+    </div>
+  )
+}
+
+function ChoiceCard({
+  active,
+  title,
+  text,
+  onClick,
+}: {
+  active: boolean
+  title: string
+  text: string
+  onClick: () => void
+}) {
   return (
     <button
-      onClick={() => onChange(!checked)}
-      className={`relative w-12 h-7 border-3 border-black transition-colors duration-200 ${
-        checked ? 'bg-brand-yellow' : 'bg-gray-200'
-      }`}
+      type="button"
+      onClick={onClick}
+      className={`text-left border-3 border-black p-4 transition ${active ? 'bg-brand-yellow shadow-comic-sm' : 'bg-white hover:bg-gray-50'}`}
     >
-      <div
-        className={`absolute top-0.5 w-4 h-4 bg-black transition-transform duration-200 ${
-          checked ? 'translate-x-6' : 'translate-x-1'
-        }`}
-      />
+      <div className="font-display font-black uppercase mb-2">{title}</div>
+      <p className="text-sm text-brand-gray-dark">{text}</p>
     </button>
+  )
+}
+
+function ToggleTile({
+  title,
+  text,
+  checked,
+  onClick,
+}: {
+  title: string
+  text: string
+  checked: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-left border-3 border-black p-4 transition ${checked ? 'bg-brand-yellow/20' : 'bg-white hover:bg-gray-50'}`}
+    >
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="font-display font-black uppercase">{title}</div>
+        <div className={`w-4 h-4 border-2 border-black ${checked ? 'bg-black' : 'bg-white'}`} />
+      </div>
+      <p className="text-sm text-brand-gray-dark">{text}</p>
+    </button>
+  )
+}
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <span className="font-display font-bold text-xs uppercase text-brand-gray-medium">{label}</span>
+      <span className="font-display text-sm text-right max-w-[220px]">{value}</span>
+    </div>
   )
 }

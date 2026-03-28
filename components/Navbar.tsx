@@ -27,19 +27,19 @@ export function Navbar() {
   // Bottom tab items for logged-in users
   const authTabs = [
     { href: '/console', label: 'Console', icon: 'grid' },
-    { href: '/companions', label: 'Jobs', icon: 'compass' },
+    { href: '/companions', label: 'Tasks', icon: 'compass' },
     { href: '/skills', label: 'Skills', icon: 'skills' },
-    { href: '/create', label: 'Post', icon: 'plus' },
-    { href: '/sell', label: 'Builders', icon: 'sell' },
+    { href: '/create', label: 'Create', icon: 'plus' },
+    { href: '/connect', label: 'Connect', icon: 'sell' },
   ]
 
   // Bottom tab items for logged-out users
   const guestTabs = [
     { href: '/', label: 'Home', icon: 'home' },
-    { href: '/companions', label: 'Jobs', icon: 'compass' },
-    { href: '/skills', label: 'Skills', icon: 'skills' },
+    { href: '/companions', label: 'Tasks', icon: 'compass' },
     { href: '/community', label: 'Community', icon: 'users' },
-    { href: '/login', label: 'Sign In', icon: 'login' },
+    { href: '/create', label: 'Create', icon: 'plus' },
+    { href: '/deploy', label: 'Claim', icon: 'sell' },
   ]
 
   const tabs = user ? authTabs : guestTabs
@@ -83,7 +83,7 @@ export function Navbar() {
                   Community
                 </Link>
                 <Link href="/companions" className={navLinkClass('/companions')}>
-                  Jobs
+                  Tasks
                 </Link>
                 <Link href="/clone" className={navLinkClass('/clone')}>
                   Clone
@@ -91,8 +91,8 @@ export function Navbar() {
                 <Link href="/skills" className={navLinkClass('/skills')}>
                   Skills
                 </Link>
-                <Link href="/sell" className={navLinkClass('/sell')}>
-                  Builders
+                <Link href="/connect" className={navLinkClass('/connect')}>
+                  Connect
                 </Link>
 
                 {/* Help dropdown (Docs + Support + Tutorials) */}
@@ -134,7 +134,7 @@ export function Navbar() {
                 </div>
 
                 <Link href="/create" className="comic-btn text-sm py-1.5 px-4 no-underline">
-                  + POST JOB
+                  + POST TASK
                 </Link>
                 <Link href="/profile" className="flex items-center gap-2 hover:opacity-80 transition">
                   {user.user_metadata?.avatar_url ? (
@@ -159,7 +159,7 @@ export function Navbar() {
                   Community
                 </Link>
                 <Link href="/companions" className={navLinkClass('/companions')}>
-                  Jobs
+                  Tasks
                 </Link>
                 <Link href="/clone" className={navLinkClass('/clone')}>
                   Clone
@@ -167,8 +167,8 @@ export function Navbar() {
                 <Link href="/skills" className={navLinkClass('/skills')}>
                   Skills
                 </Link>
-                <Link href="/sell" className={navLinkClass('/sell')}>
-                  Builders
+                <Link href="/connect" className={navLinkClass('/connect')}>
+                  Connect
                 </Link>
 
                 {/* Help dropdown (Docs + Support + Tutorials) */}
@@ -209,11 +209,11 @@ export function Navbar() {
                   )}
                 </div>
 
-                <Link
-                  href="/login"
-                  className="comic-btn text-sm py-2 px-6 no-underline"
-                >
-                  SIGN IN
+                <Link href="/create" className="comic-btn text-sm py-2 px-5 no-underline">
+                  POST TASK
+                </Link>
+                <Link href="/deploy" className="comic-btn-outline text-sm py-2 px-5 no-underline">
+                  CLAIM FLOW
                 </Link>
               </>
             )}
