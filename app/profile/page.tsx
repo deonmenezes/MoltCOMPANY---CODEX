@@ -122,7 +122,7 @@ export default function ProfilePage() {
 
   if (loading || fetching) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
+      <div className="page-shell flex items-center justify-center pt-16">
         <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full" />
       </div>
     )
@@ -130,9 +130,9 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
+      <div className="page-shell flex items-center justify-center pt-16">
         <div className="text-center">
-          <h2 className="comic-heading text-2xl mb-4">Sign in to view your profile</h2>
+          <h2 className="comic-heading text-2xl mb-4 text-white">Sign in to view your profile</h2>
           <Link href="/login" className="comic-btn inline-block">SIGN IN</Link>
         </div>
       </div>
@@ -143,7 +143,7 @@ export default function ProfilePage() {
   const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url
 
   return (
-    <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+    <div className="page-shell pt-24 pb-16 px-4">
       <div className="max-w-4xl mx-auto">
 
         {/* Profile header */}
@@ -171,7 +171,7 @@ export default function ProfilePage() {
                       value={editName}
                       onChange={e => setEditName(e.target.value)}
                       maxLength={100}
-                      className="w-full px-3 py-2 border-3 border-black text-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                      className="theme-input w-full px-3 py-2"
                     />
                   </div>
                   <div>
@@ -181,7 +181,7 @@ export default function ProfilePage() {
                       value={editAvatar}
                       onChange={e => setEditAvatar(e.target.value)}
                       placeholder="Paste image URL"
-                      className="w-full px-3 py-2 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                      className="theme-input w-full px-3 py-2"
                     />
                   </div>
                   <div>
@@ -191,7 +191,7 @@ export default function ProfilePage() {
                       onChange={e => setEditBio(e.target.value)}
                       maxLength={300}
                       rows={2}
-                      className="w-full px-3 py-2 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
+                      className="theme-input w-full resize-none px-3 py-2"
                     />
                   </div>
                   <div className="flex gap-2">
@@ -206,7 +206,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="flex-1 text-center sm:text-left">
-                <h1 className="comic-heading text-3xl">{displayName}</h1>
+                <h1 className="comic-heading text-3xl text-white">{displayName}</h1>
                 <p className="text-sm text-brand-gray-medium mt-1">{user.email || user.phone}</p>
                 {profile?.bio && (
                   <p className="text-sm text-brand-gray-dark font-body mt-2">{profile.bio}</p>
@@ -241,7 +241,7 @@ export default function ProfilePage() {
         {/* My Community Companions */}
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="comic-heading text-xl">MY PUBLISHED COMPANIONS</h2>
+            <h2 className="comic-heading text-xl text-white">MY PUBLISHED COMPANIONS</h2>
             {communityBots.filter(b => b.status === 'published').length < 3 && user.phone && (
               <Link href="/create" className="comic-btn text-sm py-2 px-4">
                 PUBLISH NEW
@@ -260,7 +260,7 @@ export default function ProfilePage() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <Link href={`/companions/community/${bot.id}`} className="font-display font-bold text-black hover:underline">
+                    <Link href={`/companions/community/${bot.id}`} className="font-display font-bold text-white hover:underline">
                       {bot.name || bot.bot_name}
                     </Link>
                     <p className="text-xs text-brand-gray-medium truncate">{bot.description}</p>
@@ -292,7 +292,7 @@ export default function ProfilePage() {
 
         {/* My Reviews */}
         <section>
-          <h2 className="comic-heading text-xl mb-4">MY REVIEWS</h2>
+          <h2 className="comic-heading text-xl mb-4 text-white">MY REVIEWS</h2>
           {reviews.length > 0 ? (
             <div className="space-y-4">
               {reviews.map(review => (

@@ -202,7 +202,7 @@ export default function CommunityBotDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
+      <div className="page-shell flex items-center justify-center pt-16">
         <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full" />
       </div>
     )
@@ -210,9 +210,9 @@ export default function CommunityBotDetailPage() {
 
   if (!bot) {
     return (
-      <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+      <div className="page-shell pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="comic-heading text-3xl mb-4">TASK PACK NOT FOUND</h1>
+          <h1 className="comic-heading text-3xl mb-4 text-white">TASK PACK NOT FOUND</h1>
           <Link href="/community" className="comic-btn inline-block">BROWSE COMMUNITY</Link>
         </div>
       </div>
@@ -225,22 +225,22 @@ export default function CommunityBotDetailPage() {
   const score = (bot.upvotes || 0) - (bot.downvotes || 0)
 
   return (
-    <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+    <div className="page-shell pt-24 pb-16 px-4">
       <div className="max-w-5xl mx-auto">
 
         {/* Breadcrumb */}
         <div className="text-sm text-brand-gray-medium mb-6 font-display">
-          <Link href="/community" className="hover:text-black transition">Community</Link>
+          <Link href="/community" className="hover:text-white transition">Community</Link>
           <span className="mx-2">/</span>
           {bot.category && bot.category !== 'other' && (
             <>
-              <Link href={`/community?category=${bot.category}`} className="hover:text-black transition capitalize">
+              <Link href={`/community?category=${bot.category}`} className="hover:text-white transition capitalize">
                 {bot.category}
               </Link>
               <span className="mx-2">/</span>
             </>
           )}
-          <span className="text-black font-bold">{displayName}</span>
+          <span className="text-brand-gray-dark font-bold">{displayName}</span>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-16">
@@ -270,7 +270,7 @@ export default function CommunityBotDetailPage() {
                   onClick={() => handleVote('up')}
                   disabled={!user || voting}
                   className={`flex items-center gap-1.5 px-4 py-2 border-3 border-black font-display font-bold text-sm transition-all ${
-                    userVote === 'up' ? 'bg-green-100 shadow-comic-sm' : 'bg-white hover:bg-green-50'
+                    userVote === 'up' ? 'border-emerald-400/60 bg-emerald-500/15 text-white shadow-comic-sm' : 'border-white/10 bg-white/5 text-white hover:bg-emerald-500/10'
                   } disabled:opacity-40 disabled:cursor-not-allowed`}
                 >
                   <span className="text-green-600">&#9650;</span>
@@ -280,7 +280,7 @@ export default function CommunityBotDetailPage() {
                   onClick={() => handleVote('down')}
                   disabled={!user || voting}
                   className={`flex items-center gap-1.5 px-4 py-2 border-3 border-black font-display font-bold text-sm transition-all ${
-                    userVote === 'down' ? 'bg-red-100 shadow-comic-sm' : 'bg-white hover:bg-red-50'
+                    userVote === 'down' ? 'border-red-400/60 bg-red-500/15 text-white shadow-comic-sm' : 'border-white/10 bg-white/5 text-white hover:bg-red-500/10'
                   } disabled:opacity-40 disabled:cursor-not-allowed`}
                 >
                   <span className="text-red-500">&#9660;</span>
@@ -304,21 +304,21 @@ export default function CommunityBotDetailPage() {
               </div>
 
               {/* Stats */}
-              <div className="w-full mt-5 pt-4 border-t-2 border-black/10 grid grid-cols-2 gap-3">
+              <div className="grid w-full grid-cols-2 gap-3 mt-5 border-t border-white/10 pt-4">
                 <div className="text-center">
-                  <div className="text-lg font-display font-black">{score}</div>
+                  <div className="text-lg font-display font-black text-white">{score}</div>
                   <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase">Score</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-display font-black">{bot.view_count || 0}</div>
+                  <div className="text-lg font-display font-black text-white">{bot.view_count || 0}</div>
                   <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase">Views</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-display font-black">{bot.deploy_count || 0}</div>
+                  <div className="text-lg font-display font-black text-white">{bot.deploy_count || 0}</div>
                   <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase">Launched</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-display font-black">{bot.fork_count || 0}</div>
+                  <div className="text-lg font-display font-black text-white">{bot.fork_count || 0}</div>
                   <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase">Forks</div>
                 </div>
               </div>
@@ -328,7 +328,7 @@ export default function CommunityBotDetailPage() {
           {/* Right content */}
           <div className="md:col-span-2">
             <div className="flex items-start gap-3 mb-1">
-              <h1 className="comic-heading text-3xl md:text-4xl">{displayName}</h1>
+              <h1 className="comic-heading text-3xl md:text-4xl text-white">{displayName}</h1>
               <span className="mt-1 px-2 py-0.5 text-[10px] font-display font-bold uppercase border border-black text-white" style={{ backgroundColor: botColor }}>
                 Community
               </span>
@@ -344,7 +344,7 @@ export default function CommunityBotDetailPage() {
             {bot.tags && bot.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {bot.tags.map(tag => (
-                  <Link key={tag} href={`/community?q=${encodeURIComponent(tag)}`} className="px-2.5 py-1 text-[10px] font-display font-bold bg-gray-100 border border-gray-300 text-gray-600 uppercase hover:bg-gray-200 transition">
+                  <Link key={tag} href={`/community?q=${encodeURIComponent(tag)}`} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-display font-bold uppercase text-brand-gray-dark hover:bg-white/8 transition">
                     #{tag}
                   </Link>
                 ))}
@@ -390,15 +390,15 @@ export default function CommunityBotDetailPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 mb-6 border-b-3 border-black">
+            <div className="mb-6 flex gap-1 border-b border-white/10">
               {(['overview', 'character', 'reviews'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-5 py-3 font-display font-bold text-sm uppercase transition-all ${
                     activeTab === tab
-                      ? 'bg-brand-yellow border-3 border-black border-b-0 -mb-[3px]'
-                      : 'bg-white text-brand-gray-medium hover:text-black'
+                      ? 'rounded-t-[18px] border border-brand-yellow/50 bg-brand-yellow/12 text-brand-yellow'
+                      : 'rounded-t-[18px] border border-transparent bg-transparent text-brand-gray-medium hover:text-white'
                   }`}
                 >
                   {tab === 'reviews' ? `REVIEWS (${totalReviews})` : tab.toUpperCase()}
@@ -416,29 +416,29 @@ export default function CommunityBotDetailPage() {
                   </div>
                   <div className="comic-card p-3">
                     <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Category</div>
-                    <div className="text-sm font-bold text-black capitalize">{bot.category || 'Other'}</div>
+                    <div className="text-sm font-bold text-white capitalize">{bot.category || 'Other'}</div>
                   </div>
                   <div className="comic-card p-3">
                     <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Channel</div>
-                    <div className="text-sm font-bold text-black">Telegram / Teams / WhatsApp</div>
+                    <div className="text-sm font-bold text-white">Telegram / Teams / WhatsApp</div>
                   </div>
                   <div className="comic-card p-3">
                     <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Published</div>
-                    <div className="text-sm font-bold text-black">{new Date(bot.created_at).toLocaleDateString()}</div>
+                    <div className="text-sm font-bold text-white">{new Date(bot.created_at).toLocaleDateString()}</div>
                   </div>
                   <div className="comic-card p-3">
                     <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Rating</div>
-                    <div className="text-sm font-bold text-black">{totalReviews > 0 ? `${avgRating}/5` : 'No ratings'}</div>
+                    <div className="text-sm font-bold text-white">{totalReviews > 0 ? `${avgRating}/5` : 'No ratings'}</div>
                   </div>
                   <div className="comic-card p-3">
                     <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Score</div>
-                    <div className="text-sm font-bold text-black">{score} points</div>
+                    <div className="text-sm font-bold text-white">{score} points</div>
                   </div>
                 </div>
 
                 {characterContent && (
                   <div>
-                    <h3 className="comic-heading text-lg mb-3">CHARACTER PREVIEW</h3>
+                    <h3 className="comic-heading text-lg mb-3 text-white">CHARACTER PREVIEW</h3>
                     <div className="comic-card p-4">
                       <pre className="whitespace-pre-wrap text-sm font-body text-brand-gray-dark max-h-48 overflow-y-auto">
                         {characterContent.slice(0, 500)}{characterContent.length > 500 ? '...' : ''}
@@ -457,7 +457,7 @@ export default function CommunityBotDetailPage() {
             {/* Tab: Character */}
             {activeTab === 'character' && (
               <div>
-                <h3 className="comic-heading text-lg mb-3">CHARACTER FILE</h3>
+                <h3 className="comic-heading text-lg mb-3 text-white">CHARACTER FILE</h3>
                 {characterContent ? (
                   <div className="comic-card p-6">
                     <pre className="whitespace-pre-wrap text-sm font-body text-brand-gray-dark max-h-[600px] overflow-y-auto">
@@ -475,7 +475,7 @@ export default function CommunityBotDetailPage() {
               <div className="space-y-6">
                 {user ? (
                   <div className="comic-card p-6">
-                    <h3 className="comic-heading text-lg mb-4">WRITE A REVIEW</h3>
+                    <h3 className="comic-heading text-lg mb-4 text-white">WRITE A REVIEW</h3>
                     <div className="flex items-center gap-1 mb-3">
                       {[1, 2, 3, 4, 5].map(star => (
                         <button key={star} onClick={() => setReviewRating(star)} className={`text-2xl transition ${star <= reviewRating ? 'text-brand-yellow' : 'text-gray-300'} hover:text-brand-yellow`}>
@@ -490,7 +490,7 @@ export default function CommunityBotDetailPage() {
                       placeholder="Share your experience with this task pack..."
                       maxLength={500}
                       rows={3}
-                      className="w-full px-4 py-3 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition resize-none mb-3"
+                      className="theme-input mb-3 w-full resize-none px-4 py-3"
                     />
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-brand-gray-medium">{reviewText.length}/500</span>
@@ -513,12 +513,12 @@ export default function CommunityBotDetailPage() {
                           {review.user_avatar ? (
                             <img src={review.user_avatar} alt="" className="w-8 h-8 rounded-full border-2 border-black object-cover" />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-100 border-2 border-black flex items-center justify-center">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/12 bg-white/8">
                               <span className="font-display font-black text-xs">{review.user_name.charAt(0).toUpperCase()}</span>
                             </div>
                           )}
                           <div className="flex-1">
-                            <p className="font-display font-bold text-sm">{review.user_name}</p>
+                            <p className="font-display font-bold text-sm text-white">{review.user_name}</p>
                             <span className="text-brand-yellow text-xs">
                               {[1, 2, 3, 4, 5].map(i => (
                                 <span key={i}>{i <= review.rating ? '\u2605' : '\u2606'}</span>
@@ -543,8 +543,8 @@ export default function CommunityBotDetailPage() {
 
         {/* Related task packs */}
         {relatedBots.length > 0 && (
-          <section className="border-t-3 border-black pt-10">
-            <h2 className="comic-heading text-2xl mb-6">SIMILAR TASK PACKS</h2>
+          <section className="border-t border-white/10 pt-10">
+            <h2 className="comic-heading text-2xl mb-6 text-white">SIMILAR TASK PACKS</h2>
             <div className="grid sm:grid-cols-3 gap-6">
               {relatedBots.map(rb => {
                 const rbName = rb.name || rb.bot_name || 'Unnamed'
@@ -553,7 +553,7 @@ export default function CommunityBotDetailPage() {
                   <Link key={rb.id} href={`/companions/community/${rb.id}`} className="comic-card-hover p-5 flex items-center gap-4">
                     <TaskMiniMark color={rbColor} />
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-display font-bold text-sm uppercase truncate">{rbName}</h4>
+                      <h4 className="font-display font-bold text-sm uppercase truncate text-white">{rbName}</h4>
                       {rb.role && <p className="text-[10px] text-brand-gray-medium uppercase">{rb.role}</p>}
                       <p className="text-xs text-brand-gray-dark truncate">{rb.description}</p>
                     </div>

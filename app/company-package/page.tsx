@@ -7,19 +7,19 @@ export default function CompanyPackagePage() {
   const team = bots.filter((b) => b.id !== 'bob-ceo')
 
   return (
-    <div className="min-h-screen bg-brand-yellow pt-16">
+    <div className="page-shell pt-16">
 
       {/* HERO - Meet Bob */}
-      <section className="py-16 px-4 border-b-3 border-black bg-white">
+      <section className="border-b border-white/10 bg-[radial-gradient(circle_at_top,rgba(246,212,78,0.18),transparent_35%),linear-gradient(180deg,#08111f_0%,#050816_100%)] px-4 py-16">
         <div className="max-w-5xl mx-auto">
-          <span className="inline-block px-4 py-1 bg-brand-yellow border-3 border-black font-display font-black text-sm uppercase mb-6 shadow-comic-sm">
+          <span className="mb-6 inline-flex rounded-full border border-brand-yellow/50 bg-brand-yellow/10 px-4 py-1 font-display text-sm font-black uppercase tracking-[0.24em] text-brand-yellow">
             THE OFFER
           </span>
           <div className="flex flex-col md:flex-row items-center gap-10">
             <div className="flex-1">
-              <h1 className="comic-heading text-4xl md:text-5xl lg:text-6xl mb-4 leading-[0.95]">
+              <h1 className="comic-heading text-4xl md:text-5xl lg:text-6xl mb-4 leading-[0.95] text-white">
                 GET THE ENTIRE<br />
-                <span className="yellow-highlight">COMPANY FOR $300/MO</span>
+                <span className="text-brand-yellow">COMPANY FOR $300/MO</span>
               </h1>
               <p className="text-lg text-brand-gray-dark font-body mb-6 max-w-lg">
                 Why launch one task runner at $40/month when you can get all 9 for $300? That&apos;s a full AI department &mdash; operations, sales, compliance, onboarding, dispatch, and more &mdash; working 24/7 on your Telegram.
@@ -33,7 +33,7 @@ export default function CompanyPackagePage() {
                   'Full department coverage from day one',
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-3">
-                    <div className="w-6 h-6 border-2 border-black bg-brand-yellow flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-brand-yellow/50 bg-brand-yellow text-black">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
                     <span className="font-body font-medium text-brand-gray-dark">{item}</span>
@@ -50,11 +50,11 @@ export default function CompanyPackagePage() {
             <div className="comic-card p-6 text-center max-w-xs w-full">
               <div className="relative inline-block mb-4">
                 <TaskMiniMark color={bob.color} size="lg" className="mx-auto" />
-                <div className="absolute -top-2 -right-2 bg-brand-yellow border-2 border-black px-2 py-0.5 font-display font-black text-xs uppercase rotate-6 shadow-comic-sm">
+                <div className="absolute -top-2 -right-2 rounded-full border border-brand-yellow/50 bg-brand-yellow/12 px-3 py-1 font-display text-xs font-black uppercase text-brand-yellow rotate-6 shadow-comic-sm">
                   LEADS THE TEAM
                 </div>
               </div>
-              <h3 className="comic-heading text-3xl">{bob.characterName}</h3>
+              <h3 className="comic-heading text-3xl text-white">{bob.characterName}</h3>
               <span
                 className="inline-block mt-1 px-3 py-0.5 text-xs font-display font-bold uppercase border-2 border-black"
                 style={{ backgroundColor: bob.color }}
@@ -82,14 +82,14 @@ export default function CompanyPackagePage() {
       </section>
 
       {/* TEAM GRID */}
-      <section className="py-16 px-4 bg-brand-yellow border-b-3 border-black">
+      <section className="border-b border-white/10 bg-[#07101f] px-4 py-16">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="comic-heading text-4xl md:text-5xl mb-2">
-              <span className="yellow-highlight bg-black text-white px-4 py-1 inline-block">YOUR FULL TEAM.</span>{' '}
+              <span className="inline-block rounded-[18px] border border-brand-yellow/40 bg-brand-yellow/12 px-4 py-1 text-brand-yellow">YOUR FULL TEAM.</span>{' '}
               ALL INCLUDED.
             </h2>
-            <p className="text-lg text-black font-body max-w-xl mx-auto mt-4">
+            <p className="mt-4 mx-auto max-w-xl text-lg font-body text-brand-gray-dark">
               8 specialized task packs + the lead operations workflow. Each runs on a dedicated AWS server, connected to your Telegram.
             </p>
           </div>
@@ -101,7 +101,7 @@ export default function CompanyPackagePage() {
                   <div className="flex items-center gap-3 mb-4">
                     <TaskMiniMark color={bot.color} />
                     <div>
-                      <h3 className="comic-heading text-2xl">{bot.characterName}</h3>
+                      <h3 className="comic-heading text-2xl text-white">{bot.characterName}</h3>
                       <p className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">{bot.characterRole}</p>
                     </div>
                   </div>
@@ -121,9 +121,9 @@ export default function CompanyPackagePage() {
       </section>
 
       {/* WHAT YOU GET */}
-      <section className="py-16 px-4 bg-white border-b-3 border-black">
+      <section className="border-b border-white/10 px-4 py-16">
         <div className="max-w-4xl mx-auto">
-          <h2 className="comic-heading text-3xl md:text-4xl text-center mb-10">WHAT&apos;S INCLUDED</h2>
+          <h2 className="comic-heading text-3xl md:text-4xl text-center mb-10 text-white">WHAT&apos;S INCLUDED</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { icon: '&#127981;', title: '9 Dedicated Servers', desc: 'Each companion runs on its own isolated AWS EC2 instance. No shared resources.' },
@@ -156,7 +156,7 @@ export default function CompanyPackagePage() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
               EMAIL US
             </a>
-            <a href="tel:+971566433640" className="comic-btn-outline bg-white text-lg inline-flex items-center gap-2">
+            <a href="tel:+971566433640" className="comic-btn-outline text-lg inline-flex items-center gap-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               CALL US
             </a>

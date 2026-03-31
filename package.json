@@ -1,14 +1,18 @@
 {
-  "name": "openclaw-setup",
+  "name": "moltcompany",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clawhub:sdk:build": "npm --prefix packages/clawhub-onboarding run build",
+    "clawhub:sdk:test": "npm --prefix packages/clawhub-onboarding run test",
+    "clawhub:sdk:packet": "node packages/clawhub-onboarding/dist/cli.js packet"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.3",
     "@aws-sdk/client-ec2": "^3.600.0",
     "@supabase/supabase-js": "^2.45.0",
     "@vercel/analytics": "^1.6.1",
@@ -16,7 +20,8 @@
     "next-auth": "^4.24.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "stripe": "^16.0.0"
+    "stripe": "^16.0.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

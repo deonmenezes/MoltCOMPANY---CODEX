@@ -17,24 +17,21 @@ export function PumpBotCard({ bot, isLiked, onLike, likingId }: PumpBotCardProps
   const communityNumericId = bot.id.startsWith('community-') ? bot.id.replace('community-', '') : null
 
   return (
-    <div className="border-3 border-black bg-white shadow-comic hover:shadow-comic-hover hover:-translate-y-1 transition-all duration-200 flex flex-col">
-      {/* Color bar */}
+    <div className="flex flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[#0f172b] shadow-comic hover:shadow-comic-hover hover:-translate-y-1 transition-all duration-200">
       <div className="h-2" style={{ backgroundColor: bot.color }} />
 
-      {/* Main content */}
       <Link
         href={bot.isOfficial ? `/companion/${bot.id}` : `/companions/community/${communityNumericId}`}
-        className="p-5 pb-3 hover:bg-gray-50/50 transition"
+        className="p-5 pb-3 transition hover:bg-white/[0.025]"
       >
-        {/* Top: Task identity */}
         <div className="flex items-start gap-4">
           <TaskMiniMark color={bot.color} size="lg" />
 
           <div className="min-w-0 flex-1 pt-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="comic-heading text-xl leading-tight">{bot.name}</h3>
+              <h3 className="comic-heading text-xl leading-tight text-white">{bot.name}</h3>
               {bot.isOfficial && (
-                <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 bg-green-500 text-white text-[10px] font-display font-bold uppercase border border-green-700">
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/16 px-2.5 py-1 text-[10px] font-display font-bold uppercase text-emerald-300">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   READY
                 </span>
@@ -48,8 +45,8 @@ export function PumpBotCard({ bot, isLiked, onLike, likingId }: PumpBotCardProps
             {bot.role && (
               <div className="mt-1.5">
                 <span
-                  className="inline-block px-2.5 py-0.5 text-[11px] font-display font-bold uppercase border-2 border-black"
-                  style={{ backgroundColor: bot.color, color: bot.color === '#FFD600' ? '#000' : '#fff' }}
+                  className="inline-block rounded-full border border-white/8 px-2.5 py-1 text-[11px] font-display font-bold uppercase"
+                  style={{ backgroundColor: bot.color, color: bot.color === '#FFD600' ? '#050816' : '#fff' }}
                 >
                   {bot.role}
                 </span>
@@ -73,10 +70,8 @@ export function PumpBotCard({ bot, isLiked, onLike, likingId }: PumpBotCardProps
         />
       </Link>
 
-      {/* Stats + Action row */}
-      <div className="px-5 pb-4 pt-2 border-t-2 border-dashed border-gray-200 flex items-center justify-between mt-auto">
+      <div className="mt-auto flex items-center justify-between border-t border-white/8 px-5 pb-4 pt-3">
         <div className="flex items-center gap-5 text-sm text-brand-gray-medium font-display">
-          {/* Like button */}
           <button
             onClick={(e) => { e.preventDefault(); onLike(bot.id) }}
             disabled={isLiking}
@@ -95,7 +90,6 @@ export function PumpBotCard({ bot, isLiked, onLike, likingId }: PumpBotCardProps
             <span className="font-bold">{bot.likeCount}</span>
           </button>
 
-          {/* Deploy count */}
           {bot.deployCount > 0 && (
             <span className="flex items-center gap-1.5">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -105,7 +99,6 @@ export function PumpBotCard({ bot, isLiked, onLike, likingId }: PumpBotCardProps
             </span>
           )}
 
-          {/* View count */}
           {bot.viewCount > 0 && (
             <span className="flex items-center gap-1.5">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -117,7 +110,7 @@ export function PumpBotCard({ bot, isLiked, onLike, likingId }: PumpBotCardProps
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="hidden xl:inline text-[10px] font-display font-black uppercase text-black">
+          <span className="hidden xl:inline text-[10px] font-display font-black uppercase text-brand-gray-medium">
             {formatCompensation(40, 20, 'completion')}
           </span>
           <Link

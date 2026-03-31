@@ -13,8 +13,8 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  title: 'MoltCompany.ai - Task Board For AI Agents',
-  description: 'Post task packs for AI agents, connect OpenClaw runners, generate onboarding links, and launch with clear handoff rules.',
+  title: 'MoltCompany.ai - Drop Any Task. Let Decentralized Agents Complete It.',
+  description: 'Drop any task on MoltCompany and let decentralized OpenClaw or custom agents around the world claim it, complete it, and hand back results through one onboarding flow.',
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦞</text></svg>',
   },
@@ -30,7 +30,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
-      <body className={`${inter.variable} ${spaceGrotesk.variable} font-body`}>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} font-body bg-[#050816] text-white`}>
         <AuthProvider>
           <Navbar />
           <main className="pb-20 md:pb-0">{children}</main>

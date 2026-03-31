@@ -100,7 +100,7 @@ function mapCommunityTask(task: CommunityTask): ClaimTask {
 export default function DeployPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-[#050816] flex items-center justify-center pt-16">
         <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full" />
       </div>
     }>
@@ -214,31 +214,31 @@ function ClaimFlow() {
 
   if (communityLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-[#050816] flex items-center justify-center pt-16">
         <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-[#050816] pt-20 pb-16 px-4 text-white">
       <div className="max-w-6xl mx-auto">
-        <section className="mb-8 border-3 border-black bg-brand-yellow/10 p-6 md:p-8">
+        <section className="theme-panel mb-8 p-6 md:p-8">
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
-              <span className="inline-block bg-white border-3 border-black px-3 py-1 text-xs font-display font-black uppercase mb-4">
+              <span className="mb-4 inline-block rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-display font-black uppercase text-brand-yellow">
                 Agent claim flow
               </span>
-              <h1 className="comic-heading text-4xl md:text-6xl mb-4">
+              <h1 className="comic-heading mb-4 text-4xl md:text-6xl text-white">
                 CLAIM THE TASK
                 <br />
                 GENERATE THE LINK
               </h1>
-              <p className="text-lg text-brand-gray-dark max-w-2xl">
+              <p className="max-w-2xl text-lg text-brand-gray-dark">
                 Claiming is no longer model setup first. Pick the task, set the payout and handoff filters, then generate the onboarding link that the OpenAI agent actually needs.
               </p>
             </div>
-            <div className="comic-card p-5 bg-white">
+            <div className="comic-card p-5">
               <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium mb-2">Current task packet</div>
               <TaskSheet
                 color={currentTask.color}
@@ -248,7 +248,7 @@ function ClaimFlow() {
                 bullets={currentTask.onboardingItems}
                 compact
               />
-              <div className="text-sm font-display font-black mt-4">
+              <div className="mt-4 text-sm font-display font-black text-brand-gray-dark">
                 {formatCompensation(Number(monthlyPrice) || currentTask.monthlyPrice, Number(commissionRate) || currentTask.commissionRate, compensationModel)}
               </div>
             </div>
@@ -263,12 +263,12 @@ function ClaimFlow() {
                   key={step}
                   type="button"
                   onClick={() => index <= stepIndex && setStepIndex(index)}
-                  className={`px-4 py-2 border-3 border-black font-display font-bold text-xs uppercase transition ${
+                  className={`px-4 py-2 font-display font-bold text-xs uppercase transition ${
                     index === stepIndex
-                      ? 'bg-brand-yellow shadow-comic-sm'
+                      ? 'theme-chip-active shadow-comic-sm'
                       : index < stepIndex
-                        ? 'bg-black text-white'
-                        : 'bg-white text-brand-gray-medium'
+                        ? 'theme-chip border-brand-yellow/20 bg-brand-yellow/10 text-brand-yellow'
+                        : 'theme-chip text-brand-gray-medium'
                   }`}
                 >
                   {index + 1}. {step}
@@ -284,7 +284,7 @@ function ClaimFlow() {
                 />
 
                 {fromAffiliate && (
-                  <div className="comic-card p-4 bg-brand-yellow/20">
+                  <div className="comic-card p-4 bg-brand-yellow/10">
                     <p className="text-sm font-display font-bold uppercase">
                       Affiliate / onboarding link source detected. The task is already preloaded for a faster claim.
                     </p>
@@ -365,7 +365,7 @@ function ClaimFlow() {
                         key={option}
                         type="button"
                         onClick={() => setChannel(option)}
-                        className={`px-3 py-2 border-2 border-black font-display font-bold text-xs uppercase ${channel === option ? 'bg-brand-yellow shadow-comic-sm' : 'bg-white hover:bg-gray-50'}`}
+                        className={`px-3 py-2 ${channel === option ? 'theme-chip-active shadow-comic-sm' : 'theme-chip'}`}
                       >
                         {option}
                       </button>
@@ -380,7 +380,7 @@ function ClaimFlow() {
                       min="0"
                       value={monthlyPrice}
                       onChange={event => setMonthlyPrice(event.target.value)}
-                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                      className="theme-input"
                     />
                   </Field>
                   <Field label="Commission %">
@@ -390,7 +390,7 @@ function ClaimFlow() {
                       max="100"
                       value={commissionRate}
                       onChange={event => setCommissionRate(event.target.value)}
-                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                      className="theme-input"
                     />
                   </Field>
                 </div>
@@ -423,14 +423,14 @@ function ClaimFlow() {
                     <input
                       value={operator}
                       onChange={event => setOperator(event.target.value)}
-                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                      className="theme-input"
                     />
                   </Field>
                   <Field label="Thread / channel">
                     <input
                       value={thread}
                       onChange={event => setThread(event.target.value)}
-                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                      className="theme-input"
                     />
                   </Field>
                 </div>
@@ -440,7 +440,7 @@ function ClaimFlow() {
                     value={handoff}
                     onChange={event => setHandoff(event.target.value)}
                     rows={4}
-                    className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
+                    className="theme-input resize-none"
                   />
                 </Field>
               </section>
@@ -455,14 +455,14 @@ function ClaimFlow() {
 
                 <div className="comic-card p-6">
                   <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium mb-2">Generated link</div>
-                  <div className="border-3 border-black bg-gray-50 p-4 font-mono text-xs break-all">
+                  <div className="rounded-[22px] border border-white/10 bg-[#09101f] p-4 font-mono text-xs break-all text-brand-gray-dark">
                     {generatedLink}
                   </div>
                 </div>
 
                 <div className="comic-card p-6">
-                  <h3 className="comic-heading text-2xl mb-4">Packet preview</h3>
-                  <pre className="max-h-[320px] overflow-auto whitespace-pre-wrap border-3 border-black bg-gray-50 p-4 text-sm text-brand-gray-dark">
+                  <h3 className="comic-heading mb-4 text-2xl text-white">Packet preview</h3>
+                  <pre className="max-h-[320px] overflow-auto whitespace-pre-wrap rounded-[22px] border border-white/10 bg-[#09101f] p-4 text-sm text-brand-gray-dark">
                     {currentTask.packetPreview}
                   </pre>
                 </div>
@@ -489,7 +489,7 @@ function ClaimFlow() {
             <div className="mt-8 flex items-center justify-between">
               {stepIndex > 0 ? (
                 <button type="button" onClick={() => setStepIndex(stepIndex - 1)} className="comic-btn-outline text-sm py-3 px-6">
-                  ← BACK
+                    {'<- BACK'}
                 </button>
               ) : (
                 <Link href="/create" className="comic-btn-outline text-sm py-3 px-6 no-underline">
@@ -508,7 +508,7 @@ function ClaimFlow() {
                   disabled={!canProceed}
                   className="comic-btn text-sm py-3 px-8 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  NEXT →
+                  {'NEXT ->'}
                 </button>
               )}
             </div>
@@ -525,8 +525,8 @@ function ClaimFlow() {
             />
 
             <div className="comic-card p-5">
-              <h2 className="comic-heading text-2xl mb-3">Compensation</h2>
-              <div className="text-lg font-display font-black">
+              <h2 className="comic-heading mb-3 text-2xl text-white">Compensation</h2>
+              <div className="text-lg font-display font-black text-brand-gray-dark">
                 {formatCompensation(
                   Number(monthlyPrice) || currentTask.monthlyPrice,
                   Number(commissionRate) || currentTask.commissionRate,
@@ -539,7 +539,7 @@ function ClaimFlow() {
             </div>
 
             <div className="comic-card p-5">
-              <h2 className="comic-heading text-2xl mb-3">What this fixes</h2>
+              <h2 className="comic-heading mb-3 text-2xl text-white">What this fixes</h2>
               <ul className="space-y-2 text-sm text-brand-gray-dark">
                 <li>- No sign-in wall before the claim packet is ready</li>
                 <li>- No old provider/API-key wizard before task context exists</li>
@@ -557,7 +557,7 @@ function ClaimFlow() {
 function SectionHeader({ title, text }: { title: string; text: string }) {
   return (
     <div>
-      <h2 className="comic-heading text-3xl mb-2">{title}</h2>
+      <h2 className="comic-heading mb-2 text-3xl text-white">{title}</h2>
       <p className="text-brand-gray-medium">{text}</p>
     </div>
   )
@@ -566,7 +566,7 @@ function SectionHeader({ title, text }: { title: string; text: string }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="comic-card p-6">
-      <label className="block font-display font-bold text-sm uppercase mb-3">{label}</label>
+      <label className="mb-3 block font-display font-bold text-sm uppercase text-brand-gray-dark">{label}</label>
       {children}
     </div>
   )
@@ -587,10 +587,10 @@ function ChoiceCard({
     <button
       type="button"
       onClick={onClick}
-      className={`text-left border-3 border-black p-4 transition ${active ? 'bg-brand-yellow shadow-comic-sm' : 'bg-white hover:bg-gray-50'}`}
+      className={`rounded-[24px] border p-4 text-left transition ${active ? 'border-brand-yellow bg-brand-yellow text-black shadow-comic-sm' : 'border-white/10 bg-white/5 hover:bg-white/8'}`}
     >
-      <div className="font-display font-black uppercase mb-2">{title}</div>
-      <p className="text-sm text-brand-gray-dark">{text}</p>
+      <div className={`mb-2 font-display font-black uppercase ${active ? 'text-black' : 'text-white'}`}>{title}</div>
+      <p className={`text-sm ${active ? 'text-black/76' : 'text-brand-gray-medium'}`}>{text}</p>
     </button>
   )
 }

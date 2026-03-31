@@ -11,7 +11,7 @@ import { TaskMiniMark, TaskSheet } from '@/components/TaskVisual'
 export default function ConsolePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
+      <div className="page-shell flex items-center justify-center pt-16">
         <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full mx-auto" />
       </div>
     }>
@@ -123,32 +123,32 @@ function ConsoleContent() {
 
   if (demoMode) {
     return (
-      <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+      <div className="page-shell pt-24 pb-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="comic-heading text-3xl">CONSOLE</h1>
+            <h1 className="comic-heading text-3xl text-white">CONSOLE</h1>
             <Link href="/companions" className="comic-btn text-sm py-2 px-5">
               CLAIM NEW TASK
             </Link>
           </div>
 
           <div className="comic-card p-5 mb-8 bg-brand-yellow/20">
-            <h2 className="comic-heading text-lg mb-2">LOCAL DEMO MODE</h2>
+            <h2 className="comic-heading text-lg mb-2 text-white">LOCAL DEMO MODE</h2>
             <p className="text-sm text-brand-gray-dark">
               This task runner is being simulated inside MoltCompany because local Supabase and billing keys are not configured yet.
             </p>
           </div>
 
           <section className="mb-12">
-            <h2 className="comic-heading text-xl mb-4">YOUR TASK RUNNER</h2>
+            <h2 className="comic-heading text-xl mb-4 text-white">YOUR TASK RUNNER</h2>
             <div className="comic-card overflow-hidden">
               <div className="h-2" style={{ backgroundColor: demoBot.color }} />
               <div className="p-6 grid md:grid-cols-[auto,1fr] gap-5 items-start">
                 <TaskMiniMark color={demoBot.color} size="lg" />
                 <div>
                   <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <h3 className="comic-heading text-2xl">{demoBot.characterName}</h3>
-                    <span className="px-3 py-1 text-[10px] font-display font-bold uppercase border-2 border-black bg-green-50">
+                    <h3 className="comic-heading text-2xl text-white">{demoBot.characterName}</h3>
+                    <span className="rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3 py-1 text-[10px] font-display font-bold uppercase text-emerald-200">
                       Demo Ready
                     </span>
                   </div>
@@ -156,20 +156,20 @@ function ConsoleContent() {
                   <div className="grid sm:grid-cols-3 gap-4 text-sm">
                     <div>
                       <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase mb-1">Provider</div>
-                      <div className="font-bold text-black">{(demoProvider || 'demo').toUpperCase()}</div>
+                      <div className="font-bold text-white">{(demoProvider || 'demo').toUpperCase()}</div>
                     </div>
                     <div>
                       <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase mb-1">Model</div>
-                      <div className="font-bold text-black">{demoModel || 'configured in launch flow'}</div>
+                      <div className="font-bold text-white">{demoModel || 'configured in launch flow'}</div>
                     </div>
                     <div>
                       <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase mb-1">Channel</div>
-                      <div className="font-bold text-black">{demoChannel || 'telegram'}</div>
+                      <div className="font-bold text-white">{demoChannel || 'telegram'}</div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="border-t-3 border-black p-6 grid md:grid-cols-2 gap-6">
+              <div className="grid gap-6 border-t border-white/10 p-6 md:grid-cols-2">
                 <div>
                   <TaskSheet
                     color={demoBot.color}
@@ -205,7 +205,7 @@ function ConsoleContent() {
 
   if (loading || fetching || fulfilling) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
+      <div className="page-shell flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full mx-auto mb-4" />
           {fulfilling && (
@@ -220,9 +220,9 @@ function ConsoleContent() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
+      <div className="page-shell flex items-center justify-center pt-16">
         <div className="text-center">
-          <h2 className="comic-heading text-2xl mb-4">Sign in to view console</h2>
+          <h2 className="comic-heading text-2xl mb-4 text-white">Sign in to view console</h2>
           <Link href="/login" className="comic-btn inline-block">
             SIGN IN
           </Link>
@@ -232,17 +232,17 @@ function ConsoleContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+    <div className="page-shell pt-24 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="comic-heading text-3xl">CONSOLE</h1>
+          <h1 className="comic-heading text-3xl text-white">CONSOLE</h1>
           <Link href="/companions" className="comic-btn text-sm py-2 px-5">
             CLAIM NEW TASK
           </Link>
         </div>
 
         <section className="mb-12">
-          <h2 className="comic-heading text-xl mb-4">YOUR TASK RUNNERS</h2>
+          <h2 className="comic-heading text-xl mb-4 text-white">YOUR TASK RUNNERS</h2>
           
           {instances.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -269,15 +269,15 @@ function ConsoleContent() {
         </section>
 
         <section>
-          <h2 className="comic-heading text-xl mb-4">RECOMMENDED FOR YOU</h2>
+          <h2 className="comic-heading text-xl mb-4 text-white">RECOMMENDED FOR YOU</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {bots.slice(0, 6).map(bot => (
               <div key={bot.id} className="comic-card-hover flex flex-col">
-                <Link href={`/companion/${bot.id}`} className="p-5 pb-2 hover:bg-gray-50/50 transition">
+                <Link href={`/companion/${bot.id}`} className="p-5 pb-2 transition hover:bg-white/[0.025]">
                   <div className="flex items-center gap-3 mb-3">
                     <TaskMiniMark color={bot.color} />
                     <div className="flex items-center gap-1.5">
-                      <h4 className="comic-heading text-lg">{bot.characterName}</h4>
+                      <h4 className="comic-heading text-lg text-white">{bot.characterName}</h4>
                       <span className="text-green-500 text-xs" title="Verified">&#10003;</span>
                     </div>
                   </div>
@@ -307,11 +307,11 @@ function ConsoleContent() {
 
         {subscription && (
           <div className="comic-card p-6 mt-8">
-            <h3 className="comic-heading text-lg mb-4">SUBSCRIPTION</h3>
+            <h3 className="comic-heading text-lg mb-4 text-white">SUBSCRIPTION</h3>
             <div className="grid md:grid-cols-2 gap-4 mb-4">
               <div>
                 <div className="text-xs text-brand-gray-medium font-display font-bold uppercase mb-1">Status</div>
-                <div className="text-sm text-black font-bold capitalize">
+                <div className="text-sm text-white font-bold capitalize">
                   {subscription.status === 'trialing' ? '3-Day Free Trial' : subscription.status}
                 </div>
               </div>
@@ -319,7 +319,7 @@ function ConsoleContent() {
                 <div className="text-xs text-brand-gray-medium font-display font-bold uppercase mb-1">
                   {subscription.status === 'trialing' ? 'Trial ends' : 'Next renewal'}
                 </div>
-                <div className="text-sm text-black">
+                <div className="text-sm text-white">
                   {subscription.current_period_end
                     ? new Date(subscription.current_period_end).toLocaleDateString()
                     : 'N/A'}

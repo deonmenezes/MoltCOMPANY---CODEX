@@ -26,10 +26,10 @@ export function CharacterEditor({ files, onChange }: CharacterEditorProps) {
           <button
             key={name}
             onClick={() => setActiveTab(name)}
-            className={`px-4 py-2 border-3 border-black font-display font-bold uppercase text-xs transition-all duration-200 ${
+            className={`rounded-[16px] px-4 py-2 border font-display font-bold uppercase text-xs transition-all duration-200 ${
               activeTab === name
-                ? 'bg-black text-white'
-                : 'bg-white text-black shadow-comic-sm hover:shadow-comic'
+                ? 'border-brand-yellow/60 bg-brand-yellow text-black shadow-comic-sm'
+                : 'border-white/10 bg-white/5 text-white shadow-comic-sm hover:border-white/20 hover:bg-white/8'
             }`}
           >
             {name}.md
@@ -47,7 +47,7 @@ export function CharacterEditor({ files, onChange }: CharacterEditorProps) {
         value={files[activeTab]}
         onChange={(e) => handleChange(e.target.value)}
         rows={12}
-        className="w-full px-4 py-3 border-3 border-black focus:ring-2 focus:ring-brand-yellow focus:outline-none font-mono text-sm resize-y"
+        className="w-full rounded-[22px] border border-white/10 bg-[#09101f] px-4 py-3 font-mono text-sm text-brand-gray-dark focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-y"
         placeholder={`Write your ${activeTab}.md content here...`}
       />
 

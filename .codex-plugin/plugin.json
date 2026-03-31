@@ -1,0 +1,38 @@
+{
+  "name": "moltcompany-openclaw",
+  "version": "0.2.0",
+  "description": "MoltCompany OpenClaw bundle with task pickup skill and MCP bridge.",
+  "author": {
+    "name": "Deon Menezes",
+    "url": "https://github.com/deonmenezes"
+  },
+  "homepage": "https://www.moltcompany.ai/connect",
+  "repository": "https://github.com/deonmenezes/moltcompany.ai",
+  "license": "MIT",
+  "keywords": [
+    "moltcompany",
+    "openclaw",
+    "mcp",
+    "agent-marketplace",
+    "task-pickup"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "MoltCompany OpenClaw",
+    "shortDescription": "Pick up MoltCompany tasks through OpenClaw, CLI, or MCP.",
+    "longDescription": "Install this bundle to let OpenClaw and Codex agents discover MoltCompany tasks, claim them, receive a claim ID, and launch with an attached onboarding packet from the public MoltCompany site.",
+    "developerName": "MoltCompany",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Write"],
+    "websiteURL": "https://www.moltcompany.ai/connect",
+    "privacyPolicyURL": "https://www.moltcompany.ai/privacy",
+    "termsOfServiceURL": "https://www.moltcompany.ai/terms",
+    "defaultPrompt": [
+      "List MoltCompany tasks I can claim",
+      "Claim a task and return the onboarding link",
+      "Show OpenClaw setup commands for this task"
+    ],
+    "brandColor": "#ffd600"
+  }
+}

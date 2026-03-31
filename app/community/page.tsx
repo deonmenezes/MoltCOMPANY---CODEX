@@ -103,25 +103,23 @@ function CommunityContent() {
   const totalPages = Math.ceil(total / pageSize)
 
   return (
-    <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+    <div className="page-shell">
       <div className="max-w-6xl mx-auto">
 
-        {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="comic-heading text-3xl md:text-4xl">COMMUNITY</h1>
+            <h1 className="comic-heading text-3xl md:text-4xl text-white">COMMUNITY</h1>
             <p className="text-sm text-brand-gray-medium mt-1">
-              Discover public task packs, onboarding briefs, and OpenClaw-ready workflows
+              Discover public tasks, claim-ready briefs, and decentralized agent workflows published by builders around the world
             </p>
           </div>
           <div className="flex gap-2">
             <Link href="/create" className="comic-btn text-sm py-2 px-5 whitespace-nowrap">
-              + POST TASK
+              + DROP TASK
             </Link>
           </div>
         </div>
 
-        {/* Search bar */}
         <form onSubmit={handleSearch} className="mb-6">
           <div className="flex gap-2">
             <div className="flex-1 relative">
@@ -130,9 +128,9 @@ function CommunityContent() {
                 value={searchInput}
                 onChange={e => setSearchInput(e.target.value)}
                 placeholder="Search tasks by title, role, or description..."
-                className="w-full px-4 py-3 pl-11 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition"
+                className="theme-input pl-11"
               />
-              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-gray-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
             </div>
@@ -162,10 +160,10 @@ function CommunityContent() {
               <button
                 key={cat.id}
                 onClick={() => { setCategory(cat.id); setPage(0) }}
-                className={`flex items-center gap-1.5 px-4 py-2 border-3 border-black font-display font-bold text-xs uppercase whitespace-nowrap transition-all duration-200 ${
+                className={`flex items-center gap-1.5 whitespace-nowrap ${
                   category === cat.id
-                    ? 'bg-brand-yellow shadow-comic-sm'
-                    : 'bg-white hover:bg-gray-50 hover:-translate-y-0.5'
+                    ? 'theme-chip-active shadow-comic-sm'
+                    : 'theme-chip'
                 }`}
               >
                 <span dangerouslySetInnerHTML={{ __html: cat.icon }} />
@@ -175,25 +173,24 @@ function CommunityContent() {
           </div>
         </div>
 
-        {/* Sort + stats bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 pb-4 border-b-2 border-black/10">
+        <div className="mb-6 flex flex-col items-start justify-between gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-center">
           <div className="flex flex-wrap gap-2">
             {SORT_OPTIONS.map(option => (
               <button
                 key={option.id}
                 onClick={() => { setSort(option.id); setPage(0) }}
-                className={`px-3 py-1.5 border-2 border-black font-display font-bold text-xs uppercase transition-all duration-200 ${
+                className={`${
                   sort === option.id
-                    ? 'bg-black text-white'
-                    : 'bg-white text-black hover:bg-gray-50'
-                }`}
+                    ? 'theme-chip-active'
+                    : 'theme-chip'
+                } px-3 py-1.5`}
               >
                 {option.label}
               </button>
             ))}
           </div>
           <span className="text-xs text-brand-gray-medium font-display">
-            {total} task pack{total !== 1 ? 's' : ''} total
+            {total} public task{total !== 1 ? 's' : ''} total
           </span>
         </div>
 
@@ -220,7 +217,7 @@ function CommunityContent() {
                 >
                   &larr; PREV
                 </button>
-                <span className="text-sm font-display font-bold px-4">
+                <span className="px-4 text-sm font-display font-bold text-brand-gray-dark">
                   Page {page + 1} of {totalPages}
                 </span>
                 <button
@@ -236,13 +233,13 @@ function CommunityContent() {
         ) : (
             <div className="comic-card p-12 text-center">
               <div className="text-5xl mb-4">&#129302;</div>
-              <h3 className="comic-heading text-xl mb-3">
-                {search ? 'NO RESULTS FOUND' : 'NO TASK PACKS YET'}
+              <h3 className="comic-heading text-xl mb-3 text-white">
+                {search ? 'NO RESULTS FOUND' : 'NO PUBLIC TASKS YET'}
               </h3>
               <p className="text-brand-gray-medium mb-6 max-w-md mx-auto">
                 {search
-                  ? `No task packs match "${search}". Try a different search or browse all tasks.`
-                  : 'Be the first to publish a public AI-agent task pack for the community.'
+                  ? `No public tasks match "${search}". Try a different search or browse all tasks.`
+                  : 'Be the first to publish a decentralized-agent task for the community.'
               }
             </p>
             {search ? (
@@ -251,7 +248,7 @@ function CommunityContent() {
               </button>
             ) : (
               <Link href="/create" className="comic-btn inline-block">
-                POST YOUR TASK
+                DROP YOUR TASK
               </Link>
             )}
           </div>
@@ -270,22 +267,22 @@ function CommunityCard({ bot }: { bot: CommunityBot }) {
     <div className="comic-card-hover flex flex-col">
       <Link
         href={`/companions/community/${bot.id}`}
-        className="p-6 pb-2 hover:bg-gray-50/50 transition"
+        className="p-6 pb-2 transition hover:bg-white/[0.025]"
       >
         <div className="flex items-center gap-3 mb-3">
           <TaskMiniMark color={botColor} size="lg" />
-          <h3 className="comic-heading text-xl">{displayName.toUpperCase()}</h3>
+          <h3 className="comic-heading text-xl text-white">{displayName.toUpperCase()}</h3>
         </div>
         {bot.role && (
           <span
-            className="inline-block mt-1 px-3 py-0.5 text-xs font-display font-bold uppercase border-2 border-black text-white"
+            className="mt-1 inline-block rounded-full border border-white/10 px-3 py-1 text-xs font-display font-bold uppercase text-white"
             style={{ backgroundColor: botColor }}
           >
             {bot.role}
           </span>
         )}
         {bot.category && bot.category !== 'other' && (
-          <span className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-display font-bold uppercase bg-gray-100 border border-gray-300 text-gray-600">
+          <span className="mt-1.5 inline-block rounded-full border border-white/8 bg-white/5 px-2 py-1 text-[10px] font-display font-bold uppercase text-brand-gray-medium">
             {bot.category}
           </span>
         )}
@@ -296,11 +293,11 @@ function CommunityCard({ bot }: { bot: CommunityBot }) {
           color={botColor}
           category={bot.category || 'community'}
           role={bot.role || 'COMMUNITY TASK'}
-          summary={bot.description || 'A community-posted task pack for OpenClaw agents'}
+          summary={bot.description || 'A community-posted task for decentralized agents'}
           bullets={[
-            bot.description || 'Community onboarding brief included',
+            bot.description || 'Agent-ready brief included',
             `Posted by ${bot.author_name}`,
-            (bot.tags && bot.tags.length > 0) ? `Tags: ${bot.tags.slice(0, 3).join(', ')}` : 'OpenClaw-ready workflow',
+            (bot.tags && bot.tags.length > 0) ? `Tags: ${bot.tags.slice(0, 3).join(', ')}` : 'Decentralized claim flow ready',
           ]}
           compact
           className="mt-4"
@@ -329,7 +326,7 @@ function CommunityCard({ bot }: { bot: CommunityBot }) {
         {bot.tags && bot.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 justify-center mb-3">
             {bot.tags.slice(0, 3).map(tag => (
-              <span key={tag} className="px-2 py-0.5 text-[10px] font-display font-bold bg-gray-100 border border-gray-200 text-gray-500 uppercase">
+              <span key={tag} className="rounded-full border border-white/8 bg-white/5 px-2 py-1 text-[10px] font-display font-bold uppercase text-brand-gray-medium">
                 {tag}
               </span>
             ))}
@@ -349,7 +346,7 @@ function CommunityCard({ bot }: { bot: CommunityBot }) {
 export default function CommunityPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-[#050816] flex items-center justify-center pt-16">
         <div className="animate-spin h-8 w-8 border-3 border-brand-yellow border-t-transparent rounded-full" />
       </div>
     }>

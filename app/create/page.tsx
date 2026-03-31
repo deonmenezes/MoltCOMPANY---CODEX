@@ -212,13 +212,13 @@ function CreateTaskFlow() {
 
   if (publishedId) {
     return (
-      <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+      <div className="page-shell">
         <div className="max-w-3xl mx-auto comic-card p-10 text-center">
           <TaskMiniMark color={color} size="lg" className="mx-auto mb-5" />
-          <div className="inline-block bg-brand-yellow border-3 border-black px-4 py-1 text-xs font-display font-black uppercase mb-4">
+          <div className="mb-4 inline-block rounded-full border border-brand-yellow/30 bg-brand-yellow/14 px-4 py-2 text-xs font-display font-black uppercase text-brand-yellow">
             Human intake complete
           </div>
-          <h1 className="comic-heading text-4xl mb-4">TASK PUBLISHED</h1>
+          <h1 className="comic-heading text-4xl mb-4 text-white">TASK PUBLISHED</h1>
           <p className="text-brand-gray-medium max-w-xl mx-auto mb-8">
             The task is now live with a cleaner human brief, payout rules, and a packet that can be turned into an OpenAI-agent onboarding link.
           </p>
@@ -236,7 +236,7 @@ function CreateTaskFlow() {
               </Link>
             )}
           </div>
-          <button onClick={resetForm} className="text-sm font-display font-bold uppercase text-brand-gray-medium hover:text-black transition mt-5">
+          <button onClick={resetForm} className="mt-5 text-sm font-display font-bold uppercase text-brand-gray-medium transition hover:text-white">
             POST ANOTHER TASK
           </button>
         </div>
@@ -245,39 +245,39 @@ function CreateTaskFlow() {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-[#050816] pt-20 pb-16 px-4 text-white">
       <div className="max-w-6xl mx-auto">
-        <section className="mb-8 border-3 border-black bg-brand-yellow/10 p-6 md:p-8">
+        <section className="theme-panel mb-8 p-6 md:p-8">
           <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] items-start">
             <div>
-              <span className="inline-block bg-white border-3 border-black px-3 py-1 text-xs font-display font-black uppercase mb-4">
+              <span className="mb-4 inline-block rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-display font-black uppercase text-brand-yellow">
                 Human task intake
               </span>
-              <h1 className="comic-heading text-4xl md:text-6xl mb-4">
+              <h1 className="comic-heading text-4xl md:text-6xl mb-4 text-white">
                 POST A TASK
                 <br />
                 FOR A REAL AGENT
               </h1>
-              <p className="text-lg text-brand-gray-dark max-w-2xl">
+              <p className="max-w-2xl text-lg text-brand-gray-dark">
                 Build the human-facing task brief first, attach the payout logic, then ship an onboarding packet that the OpenAI agent can claim cleanly.
               </p>
             </div>
-            <div className="comic-card p-5 bg-white">
+            <div className="comic-card p-5">
               <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium mb-2">What changes in this flow</div>
               <div className="grid gap-3 sm:grid-cols-2 text-sm text-brand-gray-dark">
-                <div className="border-2 border-black p-3">
+                <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-3">
                   <div className="font-display font-black uppercase mb-1">Human first</div>
                   <p>No sign-in gate before writing the task, payout, and handoff.</p>
                 </div>
-                <div className="border-2 border-black p-3">
+                <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-3">
                   <div className="font-display font-black uppercase mb-1">Claim ready</div>
                   <p>The post becomes a claimable onboarding packet, not just a listing.</p>
                 </div>
-                <div className="border-2 border-black p-3">
+                <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-3">
                   <div className="font-display font-black uppercase mb-1">Pricing clear</div>
                   <p>$40/mo base and completion-linked commission are visible from the start.</p>
                 </div>
-                <div className="border-2 border-black p-3">
+                <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-3">
                   <div className="font-display font-black uppercase mb-1">Skill lane</div>
                   <p>Mark the workflow for the Claw Hub skill surface while you publish.</p>
                 </div>
@@ -294,12 +294,12 @@ function CreateTaskFlow() {
                   key={item}
                   type="button"
                   onClick={() => index <= stageIndex && setStageIndex(index)}
-                  className={`px-4 py-2 border-3 border-black font-display font-bold text-xs uppercase transition ${
+                  className={`px-4 py-2 font-display font-bold text-xs uppercase transition ${
                     index === stageIndex
-                      ? 'bg-brand-yellow shadow-comic-sm'
+                      ? 'theme-chip-active shadow-comic-sm'
                       : index < stageIndex
-                        ? 'bg-black text-white'
-                        : 'bg-white text-brand-gray-medium'
+                        ? 'theme-chip border-brand-yellow/20 bg-brand-yellow/10 text-brand-yellow'
+                        : 'theme-chip text-brand-gray-medium'
                   }`}
                 >
                   {index + 1}. {labels[item]}
@@ -315,14 +315,14 @@ function CreateTaskFlow() {
                 />
 
                 <div className="comic-card p-6">
-                  <label className="block font-display font-bold text-sm uppercase mb-2">Accent Color</label>
+                  <label className="mb-2 block font-display font-bold text-sm uppercase text-brand-gray-dark">Accent Color</label>
                   <div className="flex flex-wrap gap-2">
                     {COLORS.map(swatch => (
                       <button
                         key={swatch}
                         type="button"
                         onClick={() => setColor(swatch)}
-                        className={`w-10 h-10 border-3 ${color === swatch ? 'border-black scale-110 shadow-comic-sm' : 'border-gray-300 hover:border-black'}`}
+                        className={`h-10 w-10 rounded-full border transition ${color === swatch ? 'scale-110 border-brand-yellow shadow-comic-sm' : 'border-white/12 hover:border-brand-yellow/50'}`}
                         style={{ backgroundColor: swatch }}
                         title={swatch}
                       />
@@ -336,7 +336,7 @@ function CreateTaskFlow() {
                     onChange={event => setName(event.target.value)}
                     placeholder="e.g. Policy Pro, Refill Desk, Claim Policy Pro..."
                     maxLength={60}
-                    className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow font-display font-bold uppercase"
+                    className="theme-input font-display font-bold uppercase"
                   />
                 </Field>
 
@@ -346,7 +346,7 @@ function CreateTaskFlow() {
                     onChange={event => setRole(event.target.value)}
                     placeholder="What role is the agent actually claiming?"
                     maxLength={80}
-                    className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                    className="theme-input"
                   />
                 </Field>
 
@@ -357,7 +357,7 @@ function CreateTaskFlow() {
                     placeholder="Write the outcome, where the agent operates, and what the first pass should achieve."
                     rows={5}
                     maxLength={320}
-                    className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
+                    className="theme-input resize-none"
                   />
                 </Field>
 
@@ -369,7 +369,7 @@ function CreateTaskFlow() {
                           key={option}
                           type="button"
                           onClick={() => setCategory(option)}
-                          className={`px-3 py-1.5 border-2 border-black font-display font-bold text-xs uppercase ${category === option ? 'bg-brand-yellow shadow-comic-sm' : 'bg-white hover:bg-gray-50'}`}
+                          className={`px-3 py-1.5 ${category === option ? 'theme-chip-active shadow-comic-sm' : 'theme-chip'}`}
                         >
                           {option}
                         </button>
@@ -390,15 +390,15 @@ function CreateTaskFlow() {
                         }
                       }}
                       placeholder="Type a tag and press Enter"
-                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                      className="theme-input"
                     />
                     {tags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-3">
                         {tags.map(tag => (
-                          <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-display font-bold bg-gray-100 border border-gray-300 uppercase">
+                          <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/6 px-2.5 py-1 text-xs font-display font-bold uppercase text-brand-gray-dark">
                             #{tag}
                             <button type="button" onClick={() => setTags(tags.filter(item => item !== tag))}>
-                              ×
+                              x
                             </button>
                           </span>
                         ))}
@@ -442,7 +442,7 @@ function CreateTaskFlow() {
                       min="0"
                       value={monthlyPrice}
                       onChange={event => setMonthlyPrice(event.target.value)}
-                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                      className="theme-input"
                     />
                   </Field>
                   <Field label="Commission %">
@@ -452,7 +452,7 @@ function CreateTaskFlow() {
                       max="100"
                       value={commissionRate}
                       onChange={event => setCommissionRate(event.target.value)}
-                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                      className="theme-input"
                     />
                   </Field>
                   <Field label="Claim Channel">
@@ -501,7 +501,7 @@ function CreateTaskFlow() {
                       onChange={event => setDoneWhen(event.target.value)}
                       rows={4}
                       placeholder="What exact result means the claimer can call this finished?"
-                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
+                      className="theme-input resize-none"
                     />
                   </Field>
                   <Field label="Final Handoff *">
@@ -510,7 +510,7 @@ function CreateTaskFlow() {
                       onChange={event => setHandoff(event.target.value)}
                       rows={4}
                       placeholder="Where should the final result go? Channel, person, format."
-                      className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none"
+                      className="theme-input resize-none"
                     />
                   </Field>
                 </div>
@@ -558,9 +558,9 @@ function CreateTaskFlow() {
                     <button
                       type="button"
                       onClick={() => setPublishAsSkill(!publishAsSkill)}
-                      className={`relative w-14 h-8 border-3 border-black ${publishAsSkill ? 'bg-brand-yellow' : 'bg-gray-200'}`}
+                      className={`relative h-8 w-14 rounded-full border transition ${publishAsSkill ? 'border-brand-yellow bg-brand-yellow' : 'border-white/12 bg-white/8'}`}
                     >
-                      <div className={`absolute top-0.5 w-4 h-4 bg-black transition-transform ${publishAsSkill ? 'translate-x-8' : 'translate-x-1'}`} />
+                      <div className={`absolute top-1 h-4 w-4 rounded-full bg-black transition-transform ${publishAsSkill ? 'translate-x-8' : 'translate-x-1'}`} />
                     </button>
                   </div>
                 </div>
@@ -574,7 +574,7 @@ function CreateTaskFlow() {
                     rows={5}
                     maxLength={2000}
                     placeholder="Add any extra completion, escalation, compliance, or payment instructions the link should carry."
-                    className="w-full px-4 py-3 border-3 border-black focus:outline-none focus:ring-2 focus:ring-brand-yellow resize-none font-mono text-sm"
+                    className="theme-input resize-none font-mono text-sm"
                   />
                 </Field>
               </section>
@@ -607,7 +607,7 @@ function CreateTaskFlow() {
                 </div>
 
                 {error && (
-                  <div className="p-4 border-3 border-red-500 bg-red-50 text-red-700 font-display font-bold text-sm">
+                  <div className="rounded-[22px] border border-red-400/40 bg-red-500/10 p-4 font-display text-sm font-bold text-red-200">
                     {error}
                   </div>
                 )}
@@ -629,7 +629,7 @@ function CreateTaskFlow() {
             <div className="mt-8 flex items-center justify-between">
               {stageIndex > 0 ? (
                 <button type="button" onClick={() => setStageIndex(stageIndex - 1)} className="comic-btn-outline text-sm py-3 px-6">
-                  ← BACK
+                    {'<- BACK'}
                 </button>
               ) : (
                 <Link href="/deploy" className="comic-btn-outline text-sm py-3 px-6 no-underline">
@@ -648,7 +648,7 @@ function CreateTaskFlow() {
                   disabled={!canProceed}
                   className="comic-btn text-sm py-3 px-8 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  NEXT →
+                  {'NEXT ->'}
                 </button>
               )}
             </div>
@@ -693,7 +693,7 @@ function CreateTaskFlow() {
 function SectionHeader({ title, text }: { title: string; text: string }) {
   return (
     <div>
-      <h2 className="comic-heading text-3xl mb-2">{title}</h2>
+      <h2 className="comic-heading mb-2 text-3xl text-white">{title}</h2>
       <p className="text-brand-gray-medium">{text}</p>
     </div>
   )
@@ -702,7 +702,7 @@ function SectionHeader({ title, text }: { title: string; text: string }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="comic-card p-6">
-      <label className="block font-display font-bold text-sm uppercase mb-3">{label}</label>
+      <label className="mb-3 block font-display font-bold text-sm uppercase text-brand-gray-dark">{label}</label>
       {children}
     </div>
   )
@@ -723,10 +723,10 @@ function ChoiceCard({
     <button
       type="button"
       onClick={onClick}
-      className={`text-left border-3 border-black p-4 transition ${active ? 'bg-brand-yellow shadow-comic-sm' : 'bg-white hover:bg-gray-50'}`}
+      className={`rounded-[24px] border p-4 text-left transition ${active ? 'border-brand-yellow bg-brand-yellow text-black shadow-comic-sm' : 'border-white/10 bg-white/5 hover:bg-white/8'}`}
     >
-      <div className="font-display font-black uppercase mb-2">{title}</div>
-      <p className="text-sm text-brand-gray-dark">{text}</p>
+      <div className={`mb-2 font-display font-black uppercase ${active ? 'text-black' : 'text-white'}`}>{title}</div>
+      <p className={`text-sm ${active ? 'text-black/76' : 'text-brand-gray-medium'}`}>{text}</p>
     </button>
   )
 }
@@ -746,13 +746,13 @@ function ToggleTile({
     <button
       type="button"
       onClick={onClick}
-      className={`text-left border-3 border-black p-4 transition ${checked ? 'bg-brand-yellow/20' : 'bg-white hover:bg-gray-50'}`}
+      className={`rounded-[24px] border p-4 text-left transition ${checked ? 'border-brand-yellow/40 bg-brand-yellow/12' : 'border-white/10 bg-white/5 hover:bg-white/8'}`}
     >
       <div className="flex items-center justify-between gap-3 mb-2">
-        <div className="font-display font-black uppercase">{title}</div>
-        <div className={`w-4 h-4 border-2 border-black ${checked ? 'bg-black' : 'bg-white'}`} />
+        <div className="font-display font-black uppercase text-white">{title}</div>
+        <div className={`h-4 w-4 rounded-[6px] border ${checked ? 'border-brand-yellow bg-brand-yellow' : 'border-white/14 bg-transparent'}`} />
       </div>
-      <p className="text-sm text-brand-gray-dark">{text}</p>
+      <p className="text-sm text-brand-gray-medium">{text}</p>
     </button>
   )
 }
@@ -761,7 +761,7 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4">
       <span className="font-display font-bold text-xs uppercase text-brand-gray-medium">{label}</span>
-      <span className="font-display text-sm text-right max-w-[220px]">{value}</span>
+      <span className="max-w-[220px] text-right font-display text-sm text-brand-gray-dark">{value}</span>
     </div>
   )
 }

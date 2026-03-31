@@ -54,7 +54,7 @@ function RatingBar({ star, count, total }: { star: number; count: number; total:
   return (
     <div className="flex items-center gap-2 text-sm">
       <span className="font-display font-bold w-12">{star} star</span>
-      <div className="flex-1 h-3 bg-gray-200 border border-black/10">
+      <div className="flex-1 h-3 overflow-hidden rounded-full border border-white/10 bg-white/8">
         <div className="h-full bg-brand-yellow" style={{ width: `${pct}%` }} />
       </div>
       <span className="text-brand-gray-medium w-8 text-right">{count}</span>
@@ -125,9 +125,9 @@ export default function CompanionDetailPage() {
 
   if (!bot) {
     return (
-      <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+      <div className="page-shell pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="comic-heading text-3xl mb-4">TASK NOT FOUND</h1>
+          <h1 className="comic-heading text-3xl mb-4 text-white">TASK NOT FOUND</h1>
           <Link href="/companions" className="comic-btn inline-block">BROWSE TASKS</Link>
         </div>
       </div>
@@ -140,14 +140,14 @@ export default function CompanionDetailPage() {
   const affiliateLink = buildAffiliateLink(bot)
 
   return (
-    <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+    <div className="page-shell pt-24 pb-16 px-4">
       <div className="max-w-5xl mx-auto">
 
         {/* Breadcrumb */}
         <div className="text-sm text-brand-gray-medium mb-6 font-display">
-          <Link href="/companions" className="hover:text-black transition">Tasks</Link>
+          <Link href="/companions" className="hover:text-white transition">Tasks</Link>
           <span className="mx-2">/</span>
-          <span className="text-black font-bold">{bot.characterName}</span>
+          <span className="text-brand-gray-dark font-bold">{bot.characterName}</span>
         </div>
 
         {/* Product section */}
@@ -169,7 +169,7 @@ export default function CompanionDetailPage() {
               <div className="mt-6 text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Stars rating={Math.round(avgRating)} />
-                  <span className="text-sm font-bold text-black">{avgRating > 0 ? avgRating.toFixed(1) : 'No ratings'}</span>
+                  <span className="text-sm font-bold text-white">{avgRating > 0 ? avgRating.toFixed(1) : 'No ratings'}</span>
                 </div>
                 {totalReviews > 0 && (
                   <p className="text-xs text-brand-gray-medium mt-1">{totalReviews} review{totalReviews !== 1 ? 's' : ''}</p>
@@ -180,7 +180,7 @@ export default function CompanionDetailPage() {
 
           {/* Right: Details */}
           <div>
-            <h1 className="comic-heading text-4xl mb-2">{bot.characterName}</h1>
+            <h1 className="comic-heading text-4xl mb-2 text-white">{bot.characterName}</h1>
             <span
               className="inline-block px-3 py-1 text-xs font-display font-bold uppercase border-2 border-black mb-4"
               style={{ backgroundColor: `${bot.color}`, color: bot.color === '#FFD600' ? '#000' : '#fff' }}
@@ -192,14 +192,14 @@ export default function CompanionDetailPage() {
 
             <div className="comic-card p-4 mb-6">
               <div className="text-xs font-display font-bold uppercase text-brand-gray-medium mb-1">Task Snapshot</div>
-              <p className="text-sm text-black font-body italic">&ldquo;{bot.tagline}&rdquo;</p>
+              <p className="text-sm text-white font-body italic">&ldquo;{bot.tagline}&rdquo;</p>
             </div>
 
             {/* Specs */}
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="comic-card p-3">
                 <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Category</div>
-                <div className="text-sm font-bold text-black capitalize">{bot.category}</div>
+                <div className="text-sm font-bold text-white capitalize">{bot.category}</div>
               </div>
               <div className="comic-card p-3">
                 <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Onboarding</div>
@@ -207,11 +207,11 @@ export default function CompanionDetailPage() {
               </div>
               <div className="comic-card p-3">
                 <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Runtime</div>
-                <div className="text-sm font-bold text-black">OpenClaw + AWS</div>
+                <div className="text-sm font-bold text-white">OpenClaw + AWS</div>
               </div>
               <div className="comic-card p-3">
                 <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium">Channel</div>
-                <div className="text-sm font-bold text-black">Telegram / Teams / WhatsApp</div>
+                <div className="text-sm font-bold text-white">Telegram / Teams / WhatsApp</div>
               </div>
             </div>
 
@@ -238,12 +238,12 @@ export default function CompanionDetailPage() {
         <section className="mb-16">
           <div className="grid md:grid-cols-2 gap-8">
             <div className="comic-card p-6">
-              <h2 className="comic-heading text-2xl mb-4">TASK ONBOARDING LINK</h2>
+              <h2 className="comic-heading text-2xl mb-4 text-white">TASK ONBOARDING LINK</h2>
               <p className="text-sm text-brand-gray-medium mb-4">{bot.affiliateHeadline}</p>
-              <div className="p-3 border-3 border-black bg-gray-50 font-mono text-xs break-all mb-4">
+              <div className="mb-4 rounded-[22px] border border-white/10 bg-white/[0.03] p-3 font-mono text-xs break-all text-white">
                 {affiliateLink}
               </div>
-              <h3 className="font-display font-bold text-sm uppercase mb-2">What the agent gets</h3>
+              <h3 className="font-display font-bold text-sm uppercase mb-2 text-white">What the agent gets</h3>
               <ul className="space-y-2 text-sm text-brand-gray-dark font-body">
                 {bot.onboardingItems.map(item => (
                   <li key={item}>- {item}</li>
@@ -251,19 +251,19 @@ export default function CompanionDetailPage() {
               </ul>
             </div>
             <div className="comic-card p-6">
-              <h2 className="comic-heading text-2xl mb-4">COMPLETION FLOW</h2>
+              <h2 className="comic-heading text-2xl mb-4 text-white">COMPLETION FLOW</h2>
               <ol className="space-y-3 text-sm text-brand-gray-dark font-body">
                 {bot.completionSteps.map((step, index) => (
                   <li key={step}>
-                    <span className="font-display font-bold text-black">{index + 1}.</span> {step}
+                    <span className="font-display font-bold text-white">{index + 1}.</span> {step}
                   </li>
                 ))}
               </ol>
-              <div className="mt-5 pt-4 border-t-2 border-dashed border-brand-gray-medium">
-                <h3 className="font-display font-bold text-sm uppercase mb-2">Typical deliverables</h3>
+              <div className="mt-5 border-t border-dashed border-white/12 pt-4">
+                <h3 className="font-display font-bold text-sm uppercase mb-2 text-white">Typical deliverables</h3>
                 <div className="flex flex-wrap gap-2">
                   {bot.exampleDeliverables.map(item => (
-                    <span key={item} className="px-2.5 py-1 text-[10px] font-display font-bold uppercase border border-black bg-brand-yellow/30">
+                    <span key={item} className="rounded-full border border-brand-yellow/30 bg-brand-yellow/12 px-2.5 py-1 text-[10px] font-display font-bold uppercase text-brand-yellow">
                       {item}
                     </span>
                   ))}
@@ -275,8 +275,8 @@ export default function CompanionDetailPage() {
 
         {/* Reviews section */}
         <section>
-          <div className="border-t-3 border-black pt-10">
-            <h2 className="comic-heading text-3xl mb-8">REVIEWS &amp; NOTES</h2>
+          <div className="border-t border-white/10 pt-10">
+            <h2 className="comic-heading text-3xl mb-8 text-white">REVIEWS &amp; NOTES</h2>
 
             {/* Rating summary */}
             {totalReviews > 0 && (
@@ -299,7 +299,7 @@ export default function CompanionDetailPage() {
             {/* Write a review */}
             {user ? (
               <div className="comic-card p-6 mb-8">
-                <h3 className="font-display font-bold uppercase mb-4">Write a review</h3>
+                <h3 className="font-display font-bold uppercase mb-4 text-white">Write a review</h3>
                 <div className="mb-3">
                   <StarSelector value={rating} onChange={setRating} />
                 </div>
@@ -309,7 +309,7 @@ export default function CompanionDetailPage() {
                   placeholder={`What do you think about the ${bot.characterName} task pack?`}
                   maxLength={500}
                   rows={3}
-                  className="w-full px-4 py-3 border-3 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow transition resize-none"
+                  className="theme-input w-full resize-none px-4 py-3"
                 />
                 <div className="flex items-center justify-between mt-3">
                   <span className="text-xs text-brand-gray-medium">{comment.length}/500</span>
@@ -341,12 +341,12 @@ export default function CompanionDetailPage() {
                       {review.user_avatar ? (
                         <img src={review.user_avatar} alt="" className="w-8 h-8 rounded-full border-2 border-black" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-brand-gray border-2 border-black flex items-center justify-center">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/12 bg-white/8">
                           <span className="font-display font-bold text-xs">{review.user_name?.charAt(0) || '?'}</span>
                         </div>
                       )}
                       <div>
-                        <div className="font-display font-bold text-sm">{review.user_name}</div>
+                        <div className="font-display font-bold text-sm text-white">{review.user_name}</div>
                         <div className="text-[10px] text-brand-gray-medium">
                           {new Date(review.created_at).toLocaleDateString()}
                         </div>

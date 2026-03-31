@@ -4,13 +4,13 @@ import Link from 'next/link'
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-white pt-20 pb-16 px-4">
+    <div className="page-shell pt-20 pb-16 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="comic-card p-10 text-center">
-          <div className="inline-block bg-brand-yellow border-3 border-black px-4 py-1 text-xs font-display font-black uppercase mb-4">
+          <div className="mb-4 inline-flex rounded-full border border-brand-yellow/50 bg-brand-yellow/10 px-4 py-1 text-xs font-display font-black uppercase tracking-[0.24em] text-brand-yellow">
             No sign-in required
           </div>
-          <h1 className="comic-heading text-4xl md:text-5xl mb-4">OPEN DEMO ACCESS</h1>
+          <h1 className="comic-heading text-4xl md:text-5xl mb-4 text-white">OPEN DEMO ACCESS</h1>
           <p className="text-brand-gray-medium max-w-2xl mx-auto mb-8">
             Google sign-in is removed for now. Use the new human task intake to post work, or open the claim flow to generate an onboarding link for the OpenAI agent.
           </p>

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "moltcompany": {
+      "command": "node",
+      "args": [
+        "./packages/clawhub-onboarding/dist/cli.js",
+        "mcp",
+        "--origin",
+        "https://www.moltcompany.ai"
+      ],
+      "autoStart": false
+    }
+  }
+}

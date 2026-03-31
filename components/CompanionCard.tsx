@@ -27,13 +27,13 @@ interface CompanionCardProps {
 }
 
 const statusConfig: Record<string, { dot: string; label: string; bg: string }> = {
-  running: { dot: 'bg-green-500', label: 'ONLINE', bg: 'bg-green-50' },
-  provisioning: { dot: 'bg-yellow-500 animate-pulse', label: 'STARTING', bg: 'bg-yellow-50' },
-  stopped: { dot: 'bg-gray-500', label: 'STOPPED', bg: 'bg-gray-50' },
-  failed: { dot: 'bg-red-500', label: 'FAILED', bg: 'bg-red-50' },
-  payment_failed: { dot: 'bg-red-500', label: 'PAYMENT FAILED', bg: 'bg-red-50' },
-  terminated: { dot: 'bg-gray-700', label: 'TERMINATED', bg: 'bg-gray-100' },
-  pending_payment: { dot: 'bg-yellow-500 animate-pulse', label: 'PROCESSING', bg: 'bg-yellow-50' },
+  running: { dot: 'bg-green-400', label: 'ONLINE', bg: 'border border-green-400/30 bg-green-500/12 text-green-100' },
+  provisioning: { dot: 'bg-yellow-400 animate-pulse', label: 'STARTING', bg: 'border border-brand-yellow/30 bg-brand-yellow/12 text-brand-yellow' },
+  stopped: { dot: 'bg-gray-400', label: 'STOPPED', bg: 'border border-white/10 bg-white/8 text-white' },
+  failed: { dot: 'bg-red-400', label: 'FAILED', bg: 'border border-red-400/30 bg-red-500/12 text-red-100' },
+  payment_failed: { dot: 'bg-red-400', label: 'PAYMENT FAILED', bg: 'border border-red-400/30 bg-red-500/12 text-red-100' },
+  terminated: { dot: 'bg-gray-500', label: 'TERMINATED', bg: 'border border-white/10 bg-white/8 text-white' },
+  pending_payment: { dot: 'bg-yellow-400 animate-pulse', label: 'PROCESSING', bg: 'border border-brand-yellow/30 bg-brand-yellow/12 text-brand-yellow' },
 }
 
 function formatModel(modelName: string | null): string {
@@ -44,7 +44,7 @@ function formatModel(modelName: string | null): string {
 
 export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: CompanionCardProps) {
   const { session } = useAuth()
-  const status = statusConfig[instance.status] || { dot: 'bg-gray-500', label: instance.status.toUpperCase(), bg: 'bg-gray-50' }
+  const status = statusConfig[instance.status] || { dot: 'bg-gray-500', label: instance.status.toUpperCase(), bg: 'border border-white/10 bg-white/8 text-white' }
   const color = instance.companion_color || '#FFD600'
   const isLoading = actionLoading === instance.id
   const name = instance.companion_name || 'Task Runner'
@@ -157,7 +157,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
 
           {/* Name + Role */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-display font-black text-lg uppercase tracking-tight leading-tight truncate">
+            <h3 className="font-display font-black text-lg uppercase tracking-tight leading-tight truncate text-white">
               {name}
             </h3>
             <span
@@ -194,28 +194,28 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
       <div className="px-5 pb-4 grid grid-cols-2 gap-x-4 gap-y-2">
         <div>
           <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase">Model</div>
-          <div className="text-xs text-black font-mono truncate">{formatModel(instance.model_name)}</div>
+          <div className="text-xs text-white font-mono truncate">{formatModel(instance.model_name)}</div>
         </div>
         <div>
           <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase">Region</div>
-          <div className="text-xs text-black">{instance.region}</div>
+          <div className="text-xs text-white">{instance.region}</div>
         </div>
         <div>
           <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase">IP</div>
-          <div className="text-xs text-black font-mono">{instance.public_ip || 'Assigning...'}</div>
+          <div className="text-xs text-white font-mono">{instance.public_ip || 'Assigning...'}</div>
         </div>
         <div>
           <div className="text-[10px] text-brand-gray-medium font-display font-bold uppercase">Created</div>
-          <div className="text-xs text-black">{new Date(instance.created_at).toLocaleDateString()}</div>
+          <div className="text-xs text-white">{new Date(instance.created_at).toLocaleDateString()}</div>
         </div>
       </div>
 
       {/* Teams endpoint (only for Teams channel, when instance has a public IP) */}
       {instance.channel === 'teams' && instance.public_ip && instance.status === 'running' && (
-        <div className="mx-5 mb-4 p-3 border-3 border-blue-400 bg-blue-50">
+        <div className="mx-5 mb-4 rounded-[22px] border border-blue-400/30 bg-blue-500/12 p-3">
           <div className="text-[10px] font-display font-bold uppercase text-blue-700 mb-1">Teams Messaging Endpoint</div>
           <div className="flex items-center justify-between gap-2">
-            <code className="text-[11px] text-black font-mono block truncate">
+            <code className="text-[11px] text-white font-mono block truncate">
               http://{instance.public_ip}:3978/api/messages
             </code>
             <button
@@ -233,7 +233,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
 
       {/* WhatsApp status (only for WhatsApp channel, when instance is running) */}
       {instance.channel === 'whatsapp' && instance.status === 'running' && (
-        <div className="mx-5 mb-4 p-3 border-3 border-green-400 bg-green-50">
+        <div className="mx-5 mb-4 rounded-[22px] border border-green-400/30 bg-green-500/12 p-3">
           <div className="text-[10px] font-display font-bold uppercase text-green-700 mb-1">WhatsApp Connected</div>
           <p className="text-[10px] text-green-600">
             Messages to your WhatsApp Business number are routed through MoltCompany.ai to this task runner.
@@ -246,11 +246,11 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
 
       {/* Gateway token */}
       {instance.gateway_token && (
-        <div className="mx-5 mb-4 p-3 border-2 border-dashed border-brand-gray-medium/30 bg-gray-50">
+        <div className="mx-5 mb-4 rounded-[22px] border border-dashed border-white/10 bg-white/[0.03] p-3">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium mb-0.5">UI Password</div>
-              <code className="text-[11px] text-black font-mono block truncate">{instance.gateway_token}</code>
+              <code className="text-[11px] text-white font-mono block truncate">{instance.gateway_token}</code>
             </div>
             <button
               onClick={() => navigator.clipboard.writeText(instance.gateway_token!)}
@@ -264,14 +264,14 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
 
       {/* Update API Key form */}
       {showKeyForm && (
-        <div className="mx-5 mb-4 p-3 border-3 border-brand-yellow bg-yellow-50">
+        <div className="mx-5 mb-4 rounded-[22px] border border-brand-yellow/40 bg-brand-yellow/12 p-3">
           <div className="text-[10px] font-display font-bold uppercase text-brand-gray-medium mb-2">New LLM API Key</div>
           <input
             type="password"
             value={newKey}
             onChange={e => setNewKey(e.target.value)}
             placeholder="Paste your new API key..."
-            className="w-full px-3 py-2 text-xs border-2 border-black text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-yellow mb-2"
+            className="theme-input mb-2 w-full px-3 py-2 text-xs"
           />
           <p className="text-[10px] text-brand-gray-medium mb-2">
             This will redeploy your task runner with the new key. Downtime: ~2 minutes.
@@ -295,7 +295,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
       )}
 
       {/* Actions */}
-      <div className="mt-auto border-t-3 border-black px-5 py-3 flex flex-col gap-2">
+      <div className="mt-auto flex flex-col gap-2 border-t border-white/10 px-5 py-3">
         <div className="flex flex-wrap gap-2">
           {['pending_payment', 'failed'].includes(instance.status) && (
             <button
@@ -337,7 +337,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
           {['running', 'stopped'].includes(instance.status) && !showKeyForm && (
             <button
               onClick={() => setShowKeyForm(true)}
-              className="text-xs py-1.5 px-3 border-3 border-brand-yellow text-black font-display font-bold uppercase shadow-comic-sm hover:bg-yellow-50 transition"
+              className="rounded-full border border-brand-yellow/40 bg-brand-yellow/12 px-3 py-1.5 text-xs font-display font-bold uppercase text-brand-yellow shadow-comic-sm transition hover:bg-brand-yellow/18"
             >
               UPDATE KEY
             </button>
@@ -353,7 +353,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
                 }
               }}
               disabled={isLoading}
-              className="text-xs py-1.5 px-3 border-3 border-red-500 text-red-500 font-display font-bold uppercase shadow-comic-sm hover:bg-red-50 transition disabled:opacity-50"
+              className="rounded-full border border-red-500/40 px-3 py-1.5 text-xs font-display font-bold uppercase text-red-300 shadow-comic-sm transition hover:bg-red-500/10 disabled:opacity-50"
             >
               {isLoading ? '...' : 'TERMINATE'}
             </button>
@@ -362,7 +362,7 @@ export function CompanionCard({ instance, onAction, onRefresh, actionLoading }: 
             <button
               onClick={handleCancelSubscription}
               disabled={cancelingSubscription || isLoading}
-              className="text-xs py-1.5 px-3 border-3 border-red-700 text-red-700 font-display font-bold uppercase shadow-comic-sm hover:bg-red-50 transition disabled:opacity-50"
+              className="rounded-full border border-red-700/40 px-3 py-1.5 text-xs font-display font-bold uppercase text-red-300 shadow-comic-sm transition hover:bg-red-500/10 disabled:opacity-50"
             >
               {cancelingSubscription ? 'CANCELING...' : 'CANCEL SUBSCRIPTION'}
             </button>

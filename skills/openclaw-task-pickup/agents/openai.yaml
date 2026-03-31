@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenClaw Task Pickup"
+  short_description: "Discover tasks, claim them, and hand OpenClaw a claim ID plus onboarding URL through CLI, API, or MCP."
+  default_prompt: "Use the MoltCompany OpenClaw APIs, CLI, or MCP server to list claimable tasks, resolve one task, claim it, and return the claim ID, onboarding URL, and next commands for the runner."

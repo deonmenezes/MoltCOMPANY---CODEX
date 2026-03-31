@@ -5,6 +5,8 @@ import { useAuth } from '@/components/AuthProvider'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 
+const GITHUB_REPO_URL = 'https://github.com/deonmenezes/moltcompany'
+
 export function Navbar() {
   const { user, loading, signOut } = useAuth()
   const pathname = usePathname()
@@ -42,37 +44,37 @@ export function Navbar() {
     { href: '/deploy', label: 'Claim', icon: 'sell' },
   ]
 
-  const tabs = user ? authTabs : guestTabs
+  const showAuthenticatedUi = !loading && !!user
+  const tabs = showAuthenticatedUi ? authTabs : guestTabs
 
   const navLinkClass = (path: string) =>
-    `font-display text-sm font-bold uppercase transition flex items-center gap-1.5 ${isActive(path) ? 'text-brand-yellow' : 'text-black hover:text-brand-gray-medium'}`
+    `font-display text-sm font-bold uppercase transition flex items-center gap-1.5 ${isActive(path) ? 'text-brand-yellow' : 'text-white/86 hover:text-brand-yellow'}`
 
   return (
     <>
       {/* Top bar */}
-      <nav className="fixed top-0 w-full z-50 bg-white border-b-3 border-black">
+      <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-[#070b17]/92 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="font-display font-black text-2xl text-black uppercase tracking-tight">
+            <Link href="/" className="font-display font-black text-2xl text-white uppercase tracking-tight">
               MOLTCOMPANY<span className="text-brand-yellow">.AI</span>
             </Link>
-            {/* GitHub with star - left side */}
             <a
-              href="https://github.com/deonmenezes/moltcompany.ai"
+              href={GITHUB_REPO_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 border-2 border-black text-black hover:bg-brand-yellow transition text-xs font-display font-bold"
-              aria-label="Star on GitHub"
+              className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/5 px-3 py-2 text-white hover:border-brand-yellow/40 hover:bg-brand-yellow/10 transition text-xs font-display font-bold"
+              aria-label="Open GitHub repository"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              Star
+              GitHub Repo
             </a>
           </div>
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-5">
-            {loading ? null : user ? (
+            {showAuthenticatedUi ? (
               <>
                 <Link href="/console" className={navLinkClass('/console')}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -91,6 +93,9 @@ export function Navbar() {
                 <Link href="/skills" className={navLinkClass('/skills')}>
                   Skills
                 </Link>
+                <Link href="/install" className={navLinkClass('/install')}>
+                  Install
+                </Link>
                 <Link href="/connect" className={navLinkClass('/connect')}>
                   Connect
                 </Link>
@@ -100,32 +105,32 @@ export function Navbar() {
                   <button
                     onClick={() => setHelpOpen(!helpOpen)}
                     className={`font-display text-sm font-bold uppercase transition flex items-center gap-1 ${
-                      isActive('/docs') || isActive('/support') || isActive('/tutorials') ? 'text-brand-yellow' : 'text-black hover:text-brand-gray-medium'
+                      isActive('/docs') || isActive('/support') || isActive('/tutorials') ? 'text-brand-yellow' : 'text-white/86 hover:text-brand-yellow'
                     }`}
                   >
                     Help
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                   </button>
                   {helpOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-44 bg-white border-3 border-black shadow-comic-sm z-50">
+                    <div className="absolute top-full right-0 mt-2 w-44 rounded-3xl border border-white/12 bg-[#0f162a]/95 p-2 shadow-comic-sm z-50 backdrop-blur-xl">
                       <Link
                         href="/docs"
                         onClick={() => setHelpOpen(false)}
-                        className={`block px-4 py-2.5 font-display text-sm font-bold uppercase transition border-b-2 border-gray-100 ${isActive('/docs') ? 'text-brand-yellow' : 'text-black hover:bg-gray-50'}`}
+                        className={`block rounded-2xl px-4 py-2.5 font-display text-sm font-bold uppercase transition ${isActive('/docs') ? 'text-brand-yellow bg-brand-yellow/10' : 'text-white/86 hover:bg-white/6'}`}
                       >
                         Docs
                       </Link>
                       <Link
                         href="/tutorials"
                         onClick={() => setHelpOpen(false)}
-                        className={`block px-4 py-2.5 font-display text-sm font-bold uppercase transition border-b-2 border-gray-100 ${isActive('/tutorials') ? 'text-brand-yellow' : 'text-black hover:bg-gray-50'}`}
+                        className={`block rounded-2xl px-4 py-2.5 font-display text-sm font-bold uppercase transition ${isActive('/tutorials') ? 'text-brand-yellow bg-brand-yellow/10' : 'text-white/86 hover:bg-white/6'}`}
                       >
                         Tutorials
                       </Link>
                       <Link
                         href="/support"
                         onClick={() => setHelpOpen(false)}
-                        className={`block px-4 py-2.5 font-display text-sm font-bold uppercase transition ${isActive('/support') ? 'text-brand-yellow' : 'text-black hover:bg-gray-50'}`}
+                        className={`block rounded-2xl px-4 py-2.5 font-display text-sm font-bold uppercase transition ${isActive('/support') ? 'text-brand-yellow bg-brand-yellow/10' : 'text-white/86 hover:bg-white/6'}`}
                       >
                         Support
                       </Link>
@@ -134,7 +139,7 @@ export function Navbar() {
                 </div>
 
                 <Link href="/create" className="comic-btn text-sm py-1.5 px-4 no-underline">
-                  + POST TASK
+                  + DROP TASK
                 </Link>
                 <Link href="/profile" className="flex items-center gap-2 hover:opacity-80 transition">
                   {user.user_metadata?.avatar_url ? (
@@ -147,7 +152,7 @@ export function Navbar() {
                 </Link>
                 <button
                   onClick={() => signOut()}
-                  className="text-sm font-medium text-brand-gray-medium hover:text-black transition"
+                  className="text-sm font-medium text-brand-gray-medium hover:text-white transition"
                 >
                   Sign out
                 </button>
@@ -167,6 +172,9 @@ export function Navbar() {
                 <Link href="/skills" className={navLinkClass('/skills')}>
                   Skills
                 </Link>
+                <Link href="/install" className={navLinkClass('/install')}>
+                  Install
+                </Link>
                 <Link href="/connect" className={navLinkClass('/connect')}>
                   Connect
                 </Link>
@@ -176,32 +184,32 @@ export function Navbar() {
                   <button
                     onClick={() => setHelpOpen(!helpOpen)}
                     className={`font-display text-sm font-bold uppercase transition flex items-center gap-1 ${
-                      isActive('/docs') || isActive('/support') || isActive('/tutorials') ? 'text-brand-yellow' : 'text-black hover:text-brand-gray-medium'
+                      isActive('/docs') || isActive('/support') || isActive('/tutorials') ? 'text-brand-yellow' : 'text-white/86 hover:text-brand-yellow'
                     }`}
                   >
                     Help
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                   </button>
                   {helpOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-44 bg-white border-3 border-black shadow-comic-sm z-50">
+                    <div className="absolute top-full right-0 mt-2 w-44 rounded-3xl border border-white/12 bg-[#0f162a]/95 p-2 shadow-comic-sm z-50 backdrop-blur-xl">
                       <Link
                         href="/docs"
                         onClick={() => setHelpOpen(false)}
-                        className={`block px-4 py-2.5 font-display text-sm font-bold uppercase transition border-b-2 border-gray-100 ${isActive('/docs') ? 'text-brand-yellow' : 'text-black hover:bg-gray-50'}`}
+                        className={`block rounded-2xl px-4 py-2.5 font-display text-sm font-bold uppercase transition ${isActive('/docs') ? 'text-brand-yellow bg-brand-yellow/10' : 'text-white/86 hover:bg-white/6'}`}
                       >
                         Docs
                       </Link>
                       <Link
                         href="/tutorials"
                         onClick={() => setHelpOpen(false)}
-                        className={`block px-4 py-2.5 font-display text-sm font-bold uppercase transition border-b-2 border-gray-100 ${isActive('/tutorials') ? 'text-brand-yellow' : 'text-black hover:bg-gray-50'}`}
+                        className={`block rounded-2xl px-4 py-2.5 font-display text-sm font-bold uppercase transition ${isActive('/tutorials') ? 'text-brand-yellow bg-brand-yellow/10' : 'text-white/86 hover:bg-white/6'}`}
                       >
                         Tutorials
                       </Link>
                       <Link
                         href="/support"
                         onClick={() => setHelpOpen(false)}
-                        className={`block px-4 py-2.5 font-display text-sm font-bold uppercase transition ${isActive('/support') ? 'text-brand-yellow' : 'text-black hover:bg-gray-50'}`}
+                        className={`block rounded-2xl px-4 py-2.5 font-display text-sm font-bold uppercase transition ${isActive('/support') ? 'text-brand-yellow bg-brand-yellow/10' : 'text-white/86 hover:bg-white/6'}`}
                       >
                         Support
                       </Link>
@@ -210,10 +218,10 @@ export function Navbar() {
                 </div>
 
                 <Link href="/create" className="comic-btn text-sm py-2 px-5 no-underline">
-                  POST TASK
+                  DROP TASK
                 </Link>
                 <Link href="/deploy" className="comic-btn-outline text-sm py-2 px-5 no-underline">
-                  CLAIM FLOW
+                  CLAIM TASK
                 </Link>
               </>
             )}
@@ -222,22 +230,22 @@ export function Navbar() {
           {/* Mobile: GitHub star + support & sign out shortcuts in top bar */}
           <div className="flex md:hidden items-center gap-2">
             <a
-              href="https://github.com/deonmenezes/moltcompany.ai"
+              href={GITHUB_REPO_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-black hover:text-brand-yellow transition"
-              aria-label="Star on GitHub"
+              className="p-2 text-white hover:text-brand-yellow transition"
+              aria-label="Open GitHub repository"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
             </a>
-            {!loading && user ? (
+            {showAuthenticatedUi ? (
               <>
-                <Link href="/support" className={`p-2 transition ${isActive('/support') ? 'text-brand-yellow' : 'text-black'}`} aria-label="Support">
+                <Link href="/support" className={`p-2 transition ${isActive('/support') ? 'text-brand-yellow' : 'text-white/86'}`} aria-label="Support">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 </Link>
                 <button
                   onClick={() => signOut()}
-                  className="p-2 text-brand-gray-medium hover:text-black transition"
+                  className="p-2 text-brand-gray-medium hover:text-white transition"
                   aria-label="Sign out"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -249,8 +257,8 @@ export function Navbar() {
       </nav>
 
       {/* Mobile bottom tab bar */}
-      {!loading && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-3 border-black md:hidden safe-bottom">
+      {(
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#070b17]/96 backdrop-blur-xl md:hidden safe-bottom">
           <div className="flex items-stretch">
             {tabs.map((tab) => {
               const active = isActive(tab.href)
@@ -278,7 +286,7 @@ export function Navbar() {
                   key={tab.href}
                   href={tab.href}
                   className={`flex-1 flex flex-col items-center justify-center py-2 transition-colors ${
-                    active ? 'text-brand-yellow' : 'text-black'
+                    active ? 'text-brand-yellow' : 'text-white/74'
                   }`}
                 >
                   <TabIcon name={tab.icon} active={active} />
